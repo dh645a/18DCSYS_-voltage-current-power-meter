@@ -1,0 +1,134 @@
+C251 COMPILER V5.60.0,  MENU                                                               17/01/24  16:40:22  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE MENU
+OBJECT MODULE PLACED IN .\Output\MENU.obj
+COMPILER INVOKED BY: E:\Program Files\keilc51\C251\BIN\C251.EXE middle\MENU\MENU.c XSMALL BROWSE INCDIR(..\COMM;.\base;.
+                    -\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\middle\MENU;.\Src;.\middle\WAVE;.\ba
+                    -se\SPI;.\base\PWM;.\base\BUZZER;.\middle\ALARM) DEBUG PRINT(.\Listings\MENU.lst) TABS(2) OBJECT(.\Output\MENU.obj) 
+
+stmt  level    source
+
+    1          /*-------------------------------------------------------------------------------------------------------
+             ---*/
+    2          /*                                                                                                       
+             -  */
+    3          /*                                                                                                       
+             -  */
+    4          /*-------------------------------------------------------------------------------------------------------
+             ---*/
+    5          
+    6          //*******************************************************************************************************
+             -****
+    7          
+    8          //*******************************************************************************************************
+             -****
+    9          #include "menu.h"
+   10          #include "base_key.h" 
+   11          #include "main.h"
+   12          #include "lcd.h"
+   13          #include "lcd_init.h"
+   14          #include "bsp_adc.h"
+   15          uint8_t display_buff[5];
+   16          unsigned char tempreture_qian,tempreture_bai,tempreture_shi,tempreture_ge;
+   17          unsigned char flag_display=1;
+   18          unsigned char flag_success,flag_heat=1;//校准标志
+   19          unsigned char adj_a=100;
+   20          int tempreture_set=0,temp_tempreture_set=0;//温度设置值
+   21          uint32_t temp_t16_count=0;
+   22          union eeprom_s16
+   23          {
+   24            int a;
+   25            uint8_t b[2];
+   26          }s16_write,s16_read;
+   27          uint16_t menu_buff[4]={GREEN,BLACK,BLACK,BLACK};
+   28          void menu_1()//1级菜单
+   29          {   
+   30   1        LCD_ShowString(10,2,"Alarm High",RED,menu_buff[0],16,0);
+   31   1        LCD_ShowString(10,2+20,"Alarm Low",RED,menu_buff[1],16,0);
+   32   1        LCD_ShowString(10,2+40,"Ajust",RED,menu_buff[2],16,0);
+   33   1        LCD_ShowString(10,2+60,"Language",RED,menu_buff[3],16,0);
+   34   1      }
+   35          void get_display_buff()
+   36          {
+   37   1        int tempreture,temp_tempreture;
+   38   1      
+   39   1      }
+*** WARNING C47 IN LINE 37 OF middle\MENU\MENU.c: 'tempreture': unreferenced local variable
+*** WARNING C47 IN LINE 37 OF middle\MENU\MENU.c: 'temp_tempreture': unreferenced local variable
+   40          void display_0(void)//显示模式0 测试模式
+   41          {
+   42   1      
+   43   1      
+   44   1      }
+   45          void display_1(void)//显示模式1 
+   46          {       
+   47   1      
+   48   1      }
+   49          void display_2(void)//显示模式2 设置温度显示
+C251 COMPILER V5.60.0,  MENU                                                               17/01/24  16:40:22  PAGE 2   
+
+   50          {
+   51   1        //menu_1();
+   52   1        if(sys_key_return.Key_short)//检测到键短按 增加键
+   53   1        {
+   54   2          //beep_demo1(1000,100,50);
+   55   2          sys_key_return.Key_short = 0;
+   56   2          flag_display=1;
+   57   2          LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+   58   2        }
+   59   1        if(sys_key_up.Key_short)//检测到键短按 增加键
+   60   1        {
+   61   2          //beep_demo1(1000,100,50);
+   62   2          sys_key_up.Key_short = 0;
+   63   2      
+   64   2        }
+   65   1        if(sys_key_down.Key_short)//检测到键短按 增加键
+   66   1        {
+   67   2          //beep_demo1(1000,100,50);
+   68   2          sys_key_down.Key_short = 0;
+   69   2      
+   70   2          
+   71   2        }
+   72   1      }
+   73          
+   74          void display(void)//显示菜单
+   75          {
+   76   1      
+   77   1        switch(flag_display)
+   78   1        {
+   79   2              case 0: display_0();break;// 调试模式
+   80   2              case 1: display_1();break;// 显示模式1 实时温度显示
+   81   2              case 2: display_2();break;// 显示模式2 设置温度显示
+   82   2      //        case 3: display_3();break;//显示模式3 设置显示  
+   83   2      
+   84   2              default :   break;//  当所有选择皆不成立，则进入预设区块。
+   85   2        }   
+   86   1      }
+   87          
+   88          /**********************************************************************
+   89          ***********************************************************************/
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       254     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        33     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        83     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  2 WARNING(S),  0 ERROR(S)

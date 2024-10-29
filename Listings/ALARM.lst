@@ -1,0 +1,158 @@
+C251 COMPILER V5.60.0,  ALARM                                                              29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE ALARM
+OBJECT MODULE PLACED IN .\Output\ALARM.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE middle\ALARM\ALARM.C XSMALL BROWSE INCDIR(..\COMM;.\base;.
+                    -\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\
+                    -PWM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\ALARM.lst) TABS(2) OBJECT(.\Output\A
+                    -LARM.obj) 
+
+stmt  level    source
+
+    1          #include "alarm.h"
+    2          #include "buzzer.h"
+    3          #include "system.h"
+    4          #include "main.h"
+    5          #include "base_key.h"
+    6           Alarm  alarmv_table={4010,3900,3700,3800,700,800,1,0,0,0};
+    7           Alarm  alarma_table={4010,3900,3700,3800,700,800,1,0,0,0};
+    8           Alarm alarmv;
+    9           Alarm alarma;
+   10           void set_alarm_value(uint16_t *alarm_value) {
+   11   1          if(sys_key_up.Key_short) {
+   12   2              Key_value_init();
+   13   2              beep_key(BTN_UP);
+   14   2              (*alarm_value)++;
+   15   2          }
+   16   1          if(sys_key_up.Key_long) {
+   17   2              Key_value_init();
+   18   2              (*alarm_value) += 10;
+   19   2          }
+   20   1          if(sys_key_down.Key_short) {
+   21   2              Key_value_init();
+   22   2              beep_key(BTN_DOWN);
+   23   2            //if(*alarm_value>0)
+   24   2              (*alarm_value)--;
+   25   2          }
+   26   1          if(sys_key_down.Key_long) {
+   27   2              Key_value_init();
+   28   2            //if(*alarm_value>10)
+   29   2              (*alarm_value) -= 10;
+   30   2          }
+   31   1      }
+   32          void set_alarm_state(uint8_t *alarm_state) {
+   33   1      
+   34   1          // 处理 Alarm state 的逻辑
+   35   1          if(sys_key_up.Key_short) {
+   36   2              Key_value_init();
+   37   2              beep_key(BTN_UP);
+   38   2              (*alarm_state)++;
+   39   2              if (*alarm_state > 1) {
+   40   3                  *alarm_state = 0;
+   41   3              }
+   42   2          }
+   43   1          if(sys_key_down.Key_short) {
+   44   2              Key_value_init();
+   45   2              beep_key(BTN_DOWN);
+   46   2              (*alarm_state)--;
+   47   2              if (*alarm_state != 0) {
+   48   3                  *alarm_state = 1;
+   49   3              }
+   50   2          }
+   51   1      }
+   52          void handleAlarm(u8 alarmState, u8 condition, u8* tempState, u8 alarmType) {
+   53   1          if (alarmState && condition && *tempState) {
+   54   2              *tempState = 0;
+   55   2              beep_alarm(alarmType); // 报警类型，例如2或3
+   56   2          }
+C251 COMPILER V5.60.0,  ALARM                                                              29/10/24  08:37:10  PAGE 2   
+
+   57   1          if (alarmState && !condition && !(*tempState)) {
+   58   2              *tempState = 1;
+   59   2              tune_stop();
+   60   2          }
+   61   1      }
+   62          void alarm_update(void)//上限 下限 区间 区外 报警
+   63          {
+   64   1        static u8 tempstate_in=1,tempstate_out=1,tempstate_h=1,tempstate_l=1; 
+   65   1        handleAlarm(alarmv_table.Alarm_H_state, sys.voltage > alarmv_table.Alarm_H, &tempstate_h, 2);
+   66   1        handleAlarm(alarmv_table.Alarm_L_state, sys.voltage < alarmv_table.Alarm_L, &tempstate_l, 2);
+   67   1        handleAlarm(alarmv_table.Alarm_Range_in_state, (alarmv_table.Alarm_Range_in_a < sys.voltage) && (sys.vol
+             -tage < alarmv_table.Alarm_Range_in_b), &tempstate_in, 3);
+   68   1        handleAlarm(alarmv_table.Alarm_Range_out_state, (alarmv_table.Alarm_Range_out_a > sys.voltage) || (sys.v
+             -oltage > alarmv_table.Alarm_Range_out_b), &tempstate_out, 3);
+   69   1      }
+   70          //void alarm_update(void)//上限 下限 区间 区外 报警
+   71          //{
+   72          //  static u8  tempstate_in=1,tempstate_out=1,tempstate_h=1,tempstate_l=1;  
+   73          //  if(alarmv_table.Alarm_H_state&&(sys.voltage>alarmv_table.Alarm_H)&&tempstate_h)
+   74          //  {
+   75          //      tempstate_h=0;
+   76          //      beep_alarm(2);
+   77          
+   78          //  }
+   79          //  if(alarmv_table.Alarm_H_state&&(sys.voltage<alarmv_table.Alarm_H)&&(tempstate_h==0))
+   80          //  {
+   81          //      tempstate_h=1;tune_stop();
+   82          //    
+   83          //  } 
+   84          //  if(alarmv_table.Alarm_L_state&&(sys.voltage<alarmv_table.Alarm_L)&&tempstate_l)
+   85          //  {
+   86          //      tempstate_l=0;
+   87          //      beep_alarm(2);
+   88          //  }
+   89          //  if(alarmv_table.Alarm_L_state&&(sys.voltage>alarmv_table.Alarm_L)&&(tempstate_l==0))
+   90          //  {
+   91          //      tempstate_l=1;tune_stop();    
+   92          //  }   
+   93          //  if(alarmv_table.Alarm_Range_in_state&&(alarmv_table.Alarm_Range_in_a<sys.voltage)&&(sys.voltage<alarmv
+             -_table.Alarm_Range_in_b)&&tempstate_in)
+   94          //  {
+   95          //      tempstate_in=0;
+   96          //      beep_alarm(3);
+   97          //  }
+   98          //  if(alarmv_table.Alarm_Range_in_state&&((alarmv_table.Alarm_Range_in_a>sys.voltage)||(sys.voltage>alarm
+             -v_table.Alarm_Range_in_b))&&(tempstate_in==0))
+   99          //  {
+  100          //      tempstate_in=1;tune_stop();   
+  101          //  }
+  102          //  if(alarmv_table.Alarm_Range_out_state&&((alarmv_table.Alarm_Range_out_a>sys.voltage)||(sys.voltage>ala
+             -rmv_table.Alarm_Range_out_b))&&tempstate_out)
+  103          //  {
+  104          //      tempstate_out=0;
+  105          //      beep_alarm(3);
+  106          //  }
+  107          //  if((alarmv_table.Alarm_Range_out_a<sys.voltage)&&(sys.voltage<alarmv_table.Alarm_Range_out_b)&&(tempst
+             -ate_out==0))
+  108          //  {
+  109          //      tempstate_out=1;tune_stop();    
+  110          //  }     
+  111          //}
+  112          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       367     ------
+C251 COMPILER V5.60.0,  ALARM                                                              29/10/24  08:37:10  PAGE 3   
+
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        68          2
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        60     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "C/C++ Runner: Debug Session",
+      "type": "cppdbg",
+      "request": "launch",
+      "args": [],
+      "stopAtEntry": false,
+      "externalConsole": true,
+      "cwd": "c:/Users/dh200/OneDrive/PROGRAM/STC/STC32G实验箱V9.6/STC32G-DEMO-CODE/92-18DC3P0.96液晶电压表_spi/middle/MENU",
+      "program": "c:/Users/dh200/OneDrive/PROGRAM/STC/STC32G实验箱V9.6/STC32G-DEMO-CODE/92-18DC3P0.96液晶电压表_spi/middle/MENU/build/Debug/outDebug",
+      "MIMode": "gdb",
+      "miDebuggerPath": "gdb",
+      "setupCommands": [
+        {
+          "description": "Enable pretty-printing for gdb",
+          "text": "-enable-pretty-printing",
+          "ignoreFailures": true
+        }
+      ]
+    }
+  ]
+}

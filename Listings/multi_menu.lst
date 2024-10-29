@@ -1,0 +1,1002 @@
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE multi_menu
+OBJECT MODULE PLACED IN .\Output\multi_menu.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE middle\MENU\multi_menu.c XSMALL BROWSE INCDIR(..\COMM;.\ba
+                    -se;.\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\b
+                    -ase\PWM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\multi_menu.lst) TABS(2) OBJECT(.
+                    -\Output\multi_menu.obj) 
+
+stmt  level    source
+
+    1          #include "multi_menu.h"   
+    2          #include "lcd.h"
+    3          #include "bsp_adc.h"
+    4          #include "lcd_init.h"
+    5          #include "base_key.h" 
+    6          #include "system.h" 
+    7          #include "wave.h" 
+    8          #include "buzzer.h"
+    9          #include "alarm.h"
+   10          #include "adjust.h"
+   11          static u8 display1_state=1,display2_state=1;
+   12          void (*current_operation_index)();
+   13          u8 func_index = 0; //初始显示欢迎界面
+   14          u8 last_index = 127; //last初始为无效值
+   15          key_table table[32]=
+   16          {
+   17            //第0层
+   18            {0,0,0,1,0,(*fun_0)},
+   19          
+   20              //第1层 报警-字体-校准-语言
+   21            {1,4,2, 16,0,(*fun_menu_main)},//current,up,down,enter,返回
+   22            {2,1,3, 9,0,(*fun_menu_main)},
+   23            {3,2,4,12,0,(*fun_menu_main)},    
+   24            {4,3,1,14,0,(*fun_menu_main)},
+   25            
+   26              //第2层 
+   27            {5,6,6,16,1,NULL},    
+   28            {6,5,5,20,1,NULL},
+   29            {7,6,8,NULL,1,NULL},                              
+   30            {8,7,5,NULL,1,NULL},
+   31            
+   32            { 9,11,10,24,2,(*fun_menu_font)}, //字体        
+   33            {10, 9,11,25,2,(*fun_menu_font)},//字体V颜色
+   34            {11, 10,9,26,2,(*fun_menu_font)},//字体A颜色
+   35            
+   36            {12,13,13,21,3,(*fun_menu_adjust)}, //校准
+   37            {13,12,12,22,3,(*fun_menu_adjust)},
+   38              
+   39            {14,15,15,14,4,(*fun_language)},
+   40            {15,14,14,15,4,(*fun_language)},//语言
+   41            
+   42             //第3层
+   43            {16,19,17,27,1,(*fun_menu_alarm)},//电压上限下限区间区外设置          
+   44            {17,16,18,28,1,(*fun_menu_alarm)},
+   45            {18,17,19,29,1,(*fun_menu_alarm)},                              
+   46            {19,18,16,30,1,(*fun_menu_alarm)},
+   47            
+   48            {20,23,21,14,6,NULL},     
+   49            {21,20,22,15,6,NULL},
+   50            {22,21,23,16,6,NULL},                             
+   51            {23,22,20,17,6,NULL},
+   52            
+   53            {24,24,24,24,9,(*fun_fong_style)},//字体  
+   54            {25,25,25,25,10,(*fun_font_color_v)},//字体V颜色
+   55            {26,26,26,26,11,(*fun_font_color_a)},//字体A颜色
+   56                  
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 2   
+
+   57            {27,27,27,27,16,(*fun_alarm_H)},                              
+   58            {28,28,28,28,17,(*fun_alarm_L)},          
+   59            {29,29,29,29,18,(*fun_alarm_In)},
+   60            {30,30,30,30,19,(*fun_alarm_Out)},              
+   61          };
+   62          void menu_level_1()//报警-字体-校准-语言
+   63          {
+   64   1        if(sys.language)
+   65   1        {
+   66   2          LCD_ShowString(20,2,"1.",RED,BLACK,16,0);
+   67   2          LCD_ShowString(20,2+20,"2.",RED,BLACK,16,0);
+   68   2          LCD_ShowString(20,2+40,"3.",RED,BLACK,16,0);
+   69   2          LCD_ShowString(20,2+60,"4.",RED,BLACK,16,0);
+   70   2          LCD_ShowChinese(20+16,2,"报警",RED,BLACK,16,0);
+   71   2          LCD_ShowChinese(20+16,2+20,"字体",RED,BLACK,16,0);
+   72   2          LCD_ShowChinese(20+16,2+40,"校准",RED,BLACK,16,0);
+   73   2          
+   74   2        }
+   75   1        else
+   76   1        {
+   77   2          LCD_ShowString(20,2,"1.Alarm",RED,BLACK,16,0);
+   78   2          LCD_ShowString(20,2+20,"2.Font Color",RED,BLACK,16,0);
+   79   2          LCD_ShowString(20,2+40,"3.Ajust",RED,BLACK,16,0);
+   80   2          //LCD_ShowString(20,2+60,"4.Language",RED,BLACK,16,0);
+   81   2        }
+   82   1        LCD_ShowString(20,2+60,"4.Lang/",RED,BLACK,16,0);
+   83   1        LCD_ShowChinese(20+56,2+60,"语言",RED,BLACK,16,0);
+   84   1      }
+   85          void menu_level_2a()
+   86          {
+   87   1        LCD_ShowString(16,2,"1.Voltage",RED,BLACK,16,0);
+   88   1        LCD_ShowString(16,2+20,"2.Current",RED,BLACK,16,0);
+   89   1      }
+   90          void menu_level_2b()
+   91          {
+   92   1      }
+   93          /*********第1层***********/
+   94          void fun_menu_main()   
+   95          {
+   96   1        switch (func_index)
+   97   1        {
+   98   2          case 1: LCD_ShowString(2,2,">",GREEN,BLACK,16,0); break;
+   99   2          case 2: LCD_ShowString(2,22,">",GREEN,BLACK,16,0);break;
+  100   2          case 3: LCD_ShowString(2,42,">",GREEN,BLACK,16,0); break;
+  101   2          case 4: LCD_ShowString(2,62,">",GREEN,BLACK,16,0);break;
+  102   2          //defau1t: break;
+  103   2        } 
+  104   1        menu_level_1();                                       
+  105   1      }
+  106          
+  107          /*********第2层***********/
+  108          void font_str()
+  109          {
+  110   1        if(sys.language)
+  111   1        {
+  112   2          LCD_ShowString(20,2,"1.",RED,BLACK,16,0);
+  113   2          LCD_ShowString(20,2+20,"2.",RED,BLACK,16,0);
+  114   2          LCD_ShowString(20,2+40,"3.",RED,BLACK,16,0);
+  115   2          LCD_ShowChinese(20+16,2,"字体",RED,BLACK,16,0);
+  116   2          LCD_ShowChinese(20+16,2+20,"字体颜色",RED,BLACK,16,0);LCD_ShowString(20+16+16*4,2+20,"V",RED,BLACK,16,0
+             -);
+  117   2          LCD_ShowChinese(20+16,2+40,"字体颜色",RED,BLACK,16,0);LCD_ShowString(20+16+16*4,2+40,"A",RED,BLACK,16,0
+             -);
+  118   2          
+  119   2        }
+  120   1        else
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 3   
+
+  121   1        {
+  122   2          LCD_ShowString(20,2,"1.Font",RED,BLACK,16,0);
+  123   2          LCD_ShowString(20,2+20,"2.Font Color V",RED,BLACK,16,0);
+  124   2          LCD_ShowString(20,2+40,"3.Font Color A",RED,BLACK,16,0);
+  125   2        }
+  126   1      }
+  127          
+  128          void fun_menu_font()    
+  129          { 
+  130   1        switch (func_index)
+  131   1        {
+  132   2          case 9 : LCD_ShowString(2,2,">",GREEN,BLACK,16,0); break;
+  133   2          case 10:  LCD_ShowString(2,22,">",GREEN,BLACK,16,0);break;
+  134   2          case 11:  LCD_ShowString(2,42,">",GREEN,BLACK,16,0);break;
+  135   2          //defau1t: break;
+  136   2        } 
+  137   1        font_str();                           
+  138   1      }
+  139          void fun_menu_adjust()    
+  140          { 
+  141   1        switch (func_index)
+  142   1        {
+  143   2          case 12 : LCD_ShowString(2,2,">",GREEN,BLACK,16,0); break;
+  144   2          case 13:  LCD_ShowString(2,22,">",GREEN,BLACK,16,0);break;
+  145   2          //defau1t: break;
+  146   2        } 
+  147   1        menu_level_2a();                            
+  148   1      }
+  149          void fun_c21()   //校准 
+  150          { 
+  151   1          LCD_ShowString(16,2,"adjust",RED,BLACK,16,0);
+  152   1          LCD_ShowString(16,2+16,"k=",RED,BLACK,16,0);
+  153   1          LCD_ShowFloatNum(16+8*2,2+16,adjustv.factor,5,4,RED,BLACK,16); //电压系数
+  154   1          LCD_ShowString(16,2+16+16,"v=",RED,BLACK,16,0);
+  155   1      
+  156   1          #ifdef DC40V
+  157   1          LCD_ShowFloatNum(16+8*2,2+16+16,sys.voltage,4,2,RED,BLACK,16); //电压 
+  158   1          #endif
+  159   1          #ifdef DC400V
+                   LCD_ShowFloatNum(16+8*2,2+16+16,sys.voltage,4,1,RED,BLACK,16); //电压 
+                   #endif
+  162   1          LCD_ShowFloatNum(16+8*2,2+16+16+16,channel_GetAdcAverage(7,100),4,0,RED,BLACK,16); //adc
+  163   1          LCD_ShowFloatNum(16+8*2+8*6,2+16+16+16,channel_GetAdcAverage(0,100),4,0,RED,BLACK,16); //adc
+  164   1          if(sys_key_up.Key_short||sys_key_up.Key_long)//检测到键短按 增加键
+  165   1          {
+  166   2            Key_value_init();
+  167   2            beep_key(BTN_UP);
+  168   2            adjustv.factor++;
+  169   2            if(adjustv.factor>20000) adjustv.factor=10000;
+  170   2          }
+  171   1          if(sys_key_down.Key_short||sys_key_down.Key_long)//检测到3键短按 减小键
+  172   1          {
+  173   2            Key_value_init();
+  174   2            beep_key(BTN_DOWN);
+  175   2            adjustv.factor--;
+  176   2            if(adjustv.factor<=0) adjustv.factor=10000;   
+  177   2          }
+  178   1      }
+  179          
+  180          void fun_language()     
+  181          {
+  182   1      
+  183   1        switch (func_index)
+  184   1        {
+  185   2          case 14 :   LCD_ShowString(160-40,2+60,"EN",GREEN,BLACK,16,0);
+  186   2                      sys.language=english; break;
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 4   
+
+  187   2          case 15:    
+  188   2                      LCD_ShowChinese(160-40,2+60,"中",GREEN,BLACK,16,0);
+  189   2                      sys.language=chinese;break;
+  190   2        }   
+  191   1          menu_level_1();
+  192   1        LCD_ShowString(2,62," ",GREEN,BLACK,16,0);
+  193   1      }
+  194          /*********第3层***********/
+  195          void menu_level_3a()
+  196          {
+  197   1        LCD_ShowString(16,2,"1.High",RED,BLACK,16,0);
+  198   1        LCD_ShowString(16,2+20,"2.Low",RED,BLACK,16,0);
+  199   1        LCD_ShowString(16,2+40,"3.Within",RED,BLACK,16,0);
+  200   1        LCD_ShowString(16,2+60,"4.Beyond",RED,BLACK,16,0);
+  201   1        if(alarma_table.Alarm_H_state)
+  202   1        LCD_ShowString(160-8*3,2,"ON ",GREEN,BLACK,16,0);
+  203   1        else
+  204   1        LCD_ShowString(160-8*3,2,"OFF",LBBLUE,BLACK,16,0);
+  205   1        if(alarma_table.Alarm_L_state)
+  206   1        LCD_ShowString(160-8*3,2+20,"ON ",GREEN,BLACK,16,0);
+  207   1        else
+  208   1        LCD_ShowString(160-8*3,2+20,"OFF",LBBLUE,BLACK,16,0);
+  209   1        if(alarma_table.Alarm_Range_in_state)
+  210   1        LCD_ShowString(160-8*3,2+40,"ON ",GREEN,BLACK,16,0);
+  211   1        else
+  212   1        LCD_ShowString(160-8*3,2+40,"OFF",LBBLUE,BLACK,16,0);
+  213   1        if(alarma_table.Alarm_Range_out_state)
+  214   1        LCD_ShowString(160-8*3,2+60,"ON ",GREEN,BLACK,16,0);
+  215   1        else
+  216   1        LCD_ShowString(160-8*3,2+60,"OFF",LBBLUE,BLACK,16,0);
+  217   1        //-------------------------------------------------
+  218   1        LCD_ShowString(160-8*4,2,"|",RED,BLACK,16,0);
+  219   1        LCD_ShowString(160-8*4,2+20,"|",RED,BLACK,16,0);
+  220   1        LCD_ShowString(160-8*4,2+40,"|",RED,BLACK,16,0);
+  221   1        LCD_ShowString(160-8*4,2+60,"|",RED,BLACK,16,0);
+  222   1        //-------------------------------------------------
+  223   1        if(alarmv_table.Alarm_H_state)
+  224   1        LCD_ShowString(160-8*7,2,"ON ",GREEN,BLACK,16,0);
+  225   1        else
+  226   1        LCD_ShowString(160-8*7,2,"OFF",LBBLUE,BLACK,16,0);
+  227   1        if(alarmv_table.Alarm_L_state)
+  228   1        LCD_ShowString(160-8*7,2+20,"ON ",GREEN,BLACK,16,0);
+  229   1        else
+  230   1        LCD_ShowString(160-8*7,2+20,"OFF",LBBLUE,BLACK,16,0);
+  231   1        if(alarmv_table.Alarm_Range_in_state)
+  232   1        LCD_ShowString(160-8*7,2+40,"ON ",GREEN,BLACK,16,0);
+  233   1        else
+  234   1        LCD_ShowString(160-8*7,2+40,"OFF",LBBLUE,BLACK,16,0);
+  235   1        if(alarmv_table.Alarm_Range_out_state)
+  236   1        LCD_ShowString(160-8*7,2+60,"ON ",GREEN,BLACK,16,0);
+  237   1        else
+  238   1        LCD_ShowString(160-8*7,2+60,"OFF",LBBLUE,BLACK,16,0);
+  239   1      }
+  240          void fun_menu_alarm()   
+  241          {
+  242   1        switch (func_index)
+  243   1        {
+  244   2          case 16: LCD_ShowString(2,2,">",GREEN,BLACK,16,0); break;
+  245   2          case 17: LCD_ShowString(2,22,">",GREEN,BLACK,16,0);break;
+  246   2          case 18: LCD_ShowString(2,42,">",GREEN,BLACK,16,0); break;
+  247   2          case 19: LCD_ShowString(2,62,">",GREEN,BLACK,16,0);break;
+  248   2          //defau1t: break;
+  249   2        } 
+  250   1        menu_level_3a();                                        
+  251   1      }
+  252          
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 5   
+
+  253          //// 显示数值及单位（电压或电流）
+  254          //void display_alarm_value(u8 x, u8 y, u16 value, u8 decimal_places, const char* unit, u16 fg_color, u16 
+             -bg_color) {
+  255          //    LCD_ShowFloatNum(x, y, value, 4, decimal_places, fg_color, bg_color, 16);  // 显示数值
+  256          //    LCD_ShowString(x + 40, y, unit, fg_color, bg_color, 16, 0);  // 显示单位
+  257          //}
+  258          
+  259          //// 显示报警状态 (ON/OFF)
+  260          //void display_alarm_state(u8 x, u8 y, u8 alarm_state, u8 is_selected, u16 fg_color, u16 bg_color) {
+  261          //    if (alarm_state) {
+  262          //        LCD_ShowString(x, y, "ON ", is_selected ? bg_color : fg_color, is_selected ? fg_color : bg_colo
+             -r, 16, 0);
+  263          //    } else {
+  264          //        LCD_ShowString(x, y, "OFF", is_selected ? bg_color : fg_color, is_selected ? fg_color : bg_colo
+             -r, 16, 0);
+  265          //    }
+  266          //}
+  267          
+  268          //// 处理报警逻辑
+  269          //void handle_alarm(u16 *alarm_value, u8 *alarm_state, u8 i, u8 item_base, u8 y_pos, const char* label, u
+             -8 decimal_places, const char* unit) {
+  270          //    LCD_ShowString(0, y_pos, label, RED, BLACK, 16, 0);  // 显示标签（电压或电流）
+  271          //    
+  272          //    // 显示报警数值
+  273          //    if (i == item_base) {  // 判断当前是否高亮数值
+  274          //        display_alarm_value(16+48, y_pos, *alarm_value, decimal_places, unit, BLACK, RED);  // 高亮显示
+  275          //    } else {
+  276          //        display_alarm_value(16+48, y_pos, *alarm_value, decimal_places, unit, RED, BLACK);  // 常规显示
+  277          //    }
+  278          //    // 显示报警状态
+  279          //    display_alarm_state(16+48+8+40+16, y_pos, *alarm_state, i == item_base + 1,GREEN , BLACK);
+  280          
+  281          //    // 处理报警数值或状态的调整
+  282          //    if (i == item_base) {
+  283          //        set_alarm_value(alarm_value);
+  284          //    } else if (i == item_base + 1) {
+  285          //        set_alarm_state(alarm_state);
+  286          //    }
+  287          //}
+  288          
+  289          //// fun_alarm_H 优化
+  290          //void fun_alarm_H() {
+  291          //    static u8 i = 1;
+  292          
+  293          //    // 第1行显示电压报警
+  294          //    handle_alarm(&alarmv_table.Alarm_H, &alarmv_table.Alarm_H_state, i, 1, 2, "1.High", 2, "V");
+  295          //    
+  296          //    // 第2行显示电流报警
+  297          //    handle_alarm(&alarma_table.Alarm_H, &alarma_table.Alarm_H_state, i, 3, 22, "2.High", 3, "A");
+  298          
+  299          //    // 切换选项
+  300          //    if (sys_key_set.Key_short) {
+  301          //        sys_key_set.Key_short = 0;
+  302          //        beep_key(BTN_SET);
+  303          //        i++;
+  304          //        if (i > 4) {
+  305          //            i = 1;
+  306          //        }
+  307          //    }
+  308          //}
+  309          
+  310          //// fun_alarm_L 优化
+  311          //void fun_alarm_L() {
+  312          //    static u8 i = 1;
+  313          
+  314          //    // 第1行显示低电压报警
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 6   
+
+  315          //    handle_alarm(&alarmv_table.Alarm_L, &alarmv_table.Alarm_L_state, i, 1, 2, "1.Low", 2, "V");
+  316          //    
+  317          //    // 第2行显示低电流报警
+  318          //    handle_alarm(&alarma_table.Alarm_L, &alarma_table.Alarm_L_state, i, 3, 22, "2.Low", 3, "A");
+  319          
+  320          //    // 切换选项
+  321          //    if (sys_key_set.Key_short) {
+  322          //        sys_key_set.Key_short = 0;
+  323          //        beep_key(BTN_SET);
+  324          //        i++;
+  325          //        if (i > 4) {
+  326          //            i = 1;
+  327          //        }
+  328          //    }
+  329          //}
+  330          void fun_alarm_H()    
+  331          { 
+  332   1        static u8 i=1;
+  333   1        LCD_ShowString((160-sizeof("High")*8)/2,0,"High",RED,BLACK,16,0);
+  334   1        #ifdef DC40V
+  335   1        if(i==1)
+  336   1        LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_H,4,2,BLACK,RED,16); //电压
+  337   1        else
+  338   1        LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_H,4,2,RED,BLACK,16); //电压
+  339   1        #endif
+  340   1        #ifdef DC400V
+                 LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_H,4,1,RED,BLACK,16); //电压
+                 #endif
+  343   1        
+  344   1        LCD_ShowString(16+16+40,2+20,"V",RED,BLACK,16,0);
+  345   1        if(alarmv_table.Alarm_H_state)
+  346   1        {
+  347   2            if(i==2)
+  348   2              LCD_ShowString(16+16+8+40+16,2+20,"ON ",BLACK,GREEN,16,0);
+  349   2            else
+  350   2              LCD_ShowString(16+16+8+40+16,2+20,"ON ",GREEN,BLACK,16,0);
+  351   2        }
+  352   1        else
+  353   1        {
+  354   2            if(i==2)
+  355   2            LCD_ShowString(16+16+8+40+16,2+20,"OFF",BLACK,LBBLUE,16,0);
+  356   2            else
+  357   2            LCD_ShowString(16+16+8+40+16,2+20,"OFF",LBBLUE,BLACK,16,0);
+  358   2        }
+  359   1        #ifdef DC4A
+  360   1        if(i==3)
+  361   1        LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_H,4,3,BLACK,RED,16); //电流
+  362   1        else
+  363   1        LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_H,4,3,RED,BLACK,16); //
+  364   1        #endif
+  365   1        #ifdef DC10A
+                 if(i==3)
+                 LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_H,4,2,BLACK,RED,16); //  
+                 else
+                 LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_H,4,2,RED,BLACK,16); //
+                 #endif
+  371   1        
+  372   1        LCD_ShowString(16+16+40,2+40,"A",RED,BLACK,16,0);
+  373   1        if(alarma_table.Alarm_H_state)
+  374   1        {
+  375   2            if(i==4)
+  376   2              LCD_ShowString(16+16+8+40+16,2+40,"ON ",BLACK,GREEN,16,0);
+  377   2            else
+  378   2              LCD_ShowString(16+16+8+40+16,2+40,"ON ",GREEN,BLACK,16,0);
+  379   2        }
+  380   1        else
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 7   
+
+  381   1        {
+  382   2            if(i==4)
+  383   2            LCD_ShowString(16+16+8+40+16,2+40,"OFF",BLACK,LBBLUE,16,0);
+  384   2            else
+  385   2            LCD_ShowString(16+16+8+40+16,2+40,"OFF",LBBLUE,BLACK,16,0);
+  386   2        }
+  387   1        switch (i)
+  388   1        {
+  389   2          case 1 :  
+  390   2                    set_alarm_value(&alarmv_table.Alarm_H);             
+  391   2                    break;
+  392   2          case 2:       
+  393   2                    set_alarm_state(&alarmv_table.Alarm_H_state);
+  394   2                    break;
+  395   2      
+  396   2          case 3:   
+  397   2                    set_alarm_value(&alarma_table.Alarm_H);               
+  398   2                    break; 
+  399   2          case 4:       
+  400   2                    set_alarm_state(&alarma_table.Alarm_H_state);
+  401   2                    break;
+  402   2        } 
+  403   1        if(sys_key_set.Key_short)
+  404   1        {
+  405   2          sys_key_set.Key_short=0;
+  406   2          beep_key(BTN_SET);
+  407   2          i++;
+  408   2          if(i>4)
+  409   2            i=1;
+  410   2        } 
+  411   1      
+  412   1      }
+  413          void fun_alarm_L()    
+  414          { 
+  415   1        static u8 i=1;
+  416   1        LCD_ShowString((160-sizeof("Low")*8)/2,0,"Low",RED,BLACK,16,0);
+  417   1        #ifdef DC40V
+  418   1        if(i==1)
+  419   1        LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_L,4,2,BLACK,RED,16); //电压
+  420   1        else
+  421   1        LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_L,4,2,RED,BLACK,16); //电压
+  422   1        #endif
+  423   1        #ifdef DC400V
+                 LCD_ShowFloatNum(16+16,2+20,alarmv_table.Alarm_L,4,1,RED,BLACK,16); //电压
+                 #endif
+  426   1        LCD_ShowString(16+16+40,2+20,"V",RED,BLACK,16,0);
+  427   1        if(alarmv_table.Alarm_L_state)
+  428   1        {
+  429   2            if(i==2)
+  430   2              LCD_ShowString(16+16+8+40+16,2+20,"ON ",BLACK,GREEN,16,0);
+  431   2            else
+  432   2              LCD_ShowString(16+16+8+40+16,2+20,"ON ",GREEN,BLACK,16,0);
+  433   2        }
+  434   1        else
+  435   1        {
+  436   2            if(i==2)
+  437   2            LCD_ShowString(16+16+8+40+16,2+20,"OFF",BLACK,LBBLUE,16,0);
+  438   2            else
+  439   2            LCD_ShowString(16+16+8+40+16,2+20,"OFF",LBBLUE,BLACK,16,0);
+  440   2        }
+  441   1        #ifdef DC4A
+  442   1        if(i==3)
+  443   1        LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_L,4,3,BLACK,RED,16); //电流
+  444   1        else
+  445   1        LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_L,4,3,RED,BLACK,16); //
+  446   1        #endif
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 8   
+
+  447   1        #ifdef DC10A
+                 if(i==3)
+                 LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_L,4,2,BLACK,RED,16); //  
+                 else
+                 LCD_ShowFloatNum(16+16,2+40,alarma_table.Alarm_L,4,2,RED,BLACK,16); //
+                 #endif
+  453   1        LCD_ShowString(16+16+40,2+40,"A",RED,BLACK,16,0);
+  454   1        if(alarma_table.Alarm_L_state)
+  455   1        {
+  456   2            if(i==4)
+  457   2              LCD_ShowString(16+16+8+40+16,2+40,"ON ",BLACK,GREEN,16,0);
+  458   2            else
+  459   2              LCD_ShowString(16+16+8+40+16,2+40,"ON ",GREEN,BLACK,16,0);
+  460   2        }
+  461   1        else
+  462   1        {
+  463   2            if(i==4)
+  464   2            LCD_ShowString(16+16+8+40+16,2+40,"OFF",BLACK,LBBLUE,16,0);
+  465   2            else
+  466   2            LCD_ShowString(16+16+8+40+16,2+40,"OFF",LBBLUE,BLACK,16,0);
+  467   2        }
+  468   1        switch (i)
+  469   1        {
+  470   2          case 1 :  
+  471   2                    set_alarm_value(&alarmv_table.Alarm_L);             
+  472   2                    break;
+  473   2          case 2:       
+  474   2                    set_alarm_state(&alarmv_table.Alarm_L_state);
+  475   2                    break;
+  476   2      
+  477   2          case 3:   
+  478   2                    set_alarm_value(&alarma_table.Alarm_L);               
+  479   2                    break; 
+  480   2          case 4:       
+  481   2                    set_alarm_state(&alarma_table.Alarm_L_state);
+  482   2                    break;
+  483   2        } 
+  484   1        if(sys_key_set.Key_short)
+  485   1        {
+  486   2          sys_key_set.Key_short=0;
+  487   2          beep_key(BTN_SET);
+  488   2          i++;
+  489   2          if(i>4)
+  490   2            i=1;
+  491   2        } 
+  492   1      
+  493   1      }
+  494          void fun_alarm_In()    
+  495          { 
+  496   1        static u8 i=1;
+  497   1        LCD_ShowString((160-sizeof("In")*8)/2,0,"In",RED,BLACK,16,0);
+  498   1        LCD_ShowString(16+48-8,2+20,"-",RED,BLACK,16,0);
+  499   1        LCD_ShowString(16+48-8,2+40,"-",RED,BLACK,16,0);
+  500   1        #ifdef DC40V
+  501   1        if(i==1)
+  502   1        LCD_ShowFloatNum(16,2+20,alarmv_table.Alarm_Range_in_a,4,2,BLACK,RED,16); //电压
+  503   1        else
+  504   1        LCD_ShowFloatNum(16,2+20,alarmv_table.Alarm_Range_in_a,4,2,RED,BLACK,16); //电压
+  505   1        if(i==2)
+  506   1        LCD_ShowFloatNum(16+48,2+20,alarmv_table.Alarm_Range_in_b,4,2,BLACK,RED,16); //电压
+  507   1        else
+  508   1        LCD_ShowFloatNum(16+48,2+20,alarmv_table.Alarm_Range_in_b,4,2,RED,BLACK,16); //电压
+  509   1        #endif
+  510   1        #ifdef DC400V
+                 #endif
+  512   1        
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 9   
+
+  513   1        LCD_ShowString(16+48+40,2+20,"V",RED,BLACK,16,0);
+  514   1        if(alarmv_table.Alarm_Range_in_state)
+  515   1        {
+  516   2            if(i==3)
+  517   2              LCD_ShowString(16+48+8+40+16,2+20,"ON ",BLACK,GREEN,16,0);
+  518   2            else
+  519   2              LCD_ShowString(16+48+8+40+16,2+20,"ON ",GREEN,BLACK,16,0);
+  520   2        }
+  521   1        else
+  522   1        {
+  523   2            if(i==3)
+  524   2            LCD_ShowString(16+48+8+40+16,2+20,"OFF",BLACK,LBBLUE,16,0);
+  525   2            else
+  526   2            LCD_ShowString(16+48+8+40+16,2+20,"OFF",LBBLUE,BLACK,16,0);
+  527   2        }
+  528   1        #ifdef DC4A
+  529   1        if(i==4)
+  530   1        LCD_ShowFloatNum(16,2+40,alarma_table.Alarm_Range_in_a,4,3,BLACK,RED,16); //电流
+  531   1        else
+  532   1        LCD_ShowFloatNum(16,2+40,alarma_table.Alarm_Range_in_a,4,3,RED,BLACK,16); //
+  533   1        if(i==5)
+  534   1        LCD_ShowFloatNum(16+48,2+40,alarma_table.Alarm_Range_in_b,4,3,BLACK,RED,16); //电流
+  535   1        else
+  536   1        LCD_ShowFloatNum(16+48,2+40,alarma_table.Alarm_Range_in_b,4,3,RED,BLACK,16); //
+  537   1        #endif
+  538   1        #ifdef DC10A
+                 #endif
+  540   1        LCD_ShowString(16+48+40,2+40,"A",RED,BLACK,16,0);
+  541   1        if(alarma_table.Alarm_Range_in_state)
+  542   1        {
+  543   2            if(i==6)
+  544   2              LCD_ShowString(16+48+8+40+16,2+40,"ON ",BLACK,GREEN,16,0);
+  545   2            else
+  546   2              LCD_ShowString(16+48+8+40+16,2+40,"ON ",GREEN,BLACK,16,0);
+  547   2        }
+  548   1        else
+  549   1        {
+  550   2            if(i==6)
+  551   2            LCD_ShowString(16+48+8+40+16,2+40,"OFF",BLACK,LBBLUE,16,0);
+  552   2            else
+  553   2            LCD_ShowString(16+48+8+40+16,2+40,"OFF",LBBLUE,BLACK,16,0);
+  554   2        }
+  555   1        switch (i)
+  556   1        {
+  557   2          case 1 : set_alarm_value(&alarmv_table.Alarm_Range_in_a);     
+  558   2                    break;
+  559   2          case 2:  set_alarm_value(&alarmv_table.Alarm_Range_in_b);
+  560   2                    break;
+  561   2          case 3:   set_alarm_state(&alarmv_table.Alarm_Range_in_state);      
+  562   2                    break;
+  563   2          case 4 : set_alarm_value(&alarma_table.Alarm_Range_in_a);     
+  564   2                    break;
+  565   2          case 5:  set_alarm_value(&alarma_table.Alarm_Range_in_b);
+  566   2                    break;
+  567   2          case 6:   set_alarm_state(&alarma_table.Alarm_Range_in_state);      
+  568   2                    break;
+  569   2        } 
+  570   1        if(sys_key_set.Key_short)
+  571   1        {
+  572   2          sys_key_set.Key_short=0;
+  573   2          beep_key(BTN_SET);
+  574   2          i++;
+  575   2          if(i>6)
+  576   2            i=1;
+  577   2        }                                             
+  578   1      }
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 10  
+
+  579          void fun_alarm_Out()    
+  580          { 
+  581   1        static u8 i=1;
+  582   1        LCD_ShowString((160-sizeof("Out")*8)/2,0,"Out",RED,BLACK,16,0);
+  583   1        LCD_ShowString(16+48-8,2+20,"#",RED,BLACK,16,0);
+  584   1        LCD_ShowString(16+48-8,2+40,"#",RED,BLACK,16,0);
+  585   1        #ifdef DC40V
+  586   1        if(i==1)
+  587   1        LCD_ShowFloatNum(16,2+20,alarmv_table.Alarm_Range_out_a,4,2,BLACK,RED,16); //电压
+  588   1        else
+  589   1        LCD_ShowFloatNum(16,2+20,alarmv_table.Alarm_Range_out_a,4,2,RED,BLACK,16); //电压
+  590   1        if(i==2)
+  591   1        LCD_ShowFloatNum(16+48,2+20,alarmv_table.Alarm_Range_out_b,4,2,BLACK,RED,16); //电压
+  592   1        else
+  593   1        LCD_ShowFloatNum(16+48,2+20,alarmv_table.Alarm_Range_out_b,4,2,RED,BLACK,16); //电压
+  594   1        #endif
+  595   1        #ifdef DC400V
+                 #endif
+  597   1        
+  598   1        LCD_ShowString(16+48+40,2+20,"V",RED,BLACK,16,0);
+  599   1        if(alarmv_table.Alarm_Range_out_state)
+  600   1        {
+  601   2            if(i==3)
+  602   2              LCD_ShowString(16+48+8+40+16,2+20,"ON ",BLACK,GREEN,16,0);
+  603   2            else
+  604   2              LCD_ShowString(16+48+8+40+16,2+20,"ON ",GREEN,BLACK,16,0);
+  605   2        }
+  606   1        else
+  607   1        {
+  608   2            if(i==3)
+  609   2            LCD_ShowString(16+48+8+40+16,2+20,"OFF",BLACK,LBBLUE,16,0);
+  610   2            else
+  611   2            LCD_ShowString(16+48+8+40+16,2+20,"OFF",LBBLUE,BLACK,16,0);
+  612   2        }
+  613   1        #ifdef DC4A
+  614   1        if(i==4)
+  615   1        LCD_ShowFloatNum(16,2+40,alarma_table.Alarm_Range_out_a,4,3,BLACK,RED,16); //电流
+  616   1        else
+  617   1        LCD_ShowFloatNum(16,2+40,alarma_table.Alarm_Range_out_a,4,3,RED,BLACK,16); //
+  618   1        if(i==5)
+  619   1        LCD_ShowFloatNum(16+48,2+40,alarma_table.Alarm_Range_out_b,4,3,BLACK,RED,16); //电流
+  620   1        else
+  621   1        LCD_ShowFloatNum(16+48,2+40,alarma_table.Alarm_Range_out_b,4,3,RED,BLACK,16); //
+  622   1        #endif
+  623   1        #ifdef DC10A
+                 #endif
+  625   1        LCD_ShowString(16+48+40,2+40,"A",RED,BLACK,16,0);
+  626   1        if(alarma_table.Alarm_Range_out_state)
+  627   1        {
+  628   2            if(i==6)
+  629   2              LCD_ShowString(16+48+8+40+16,2+40,"ON ",BLACK,GREEN,16,0);
+  630   2            else
+  631   2              LCD_ShowString(16+48+8+40+16,2+40,"ON ",GREEN,BLACK,16,0);
+  632   2        }
+  633   1        else
+  634   1        {
+  635   2            if(i==6)
+  636   2            LCD_ShowString(16+48+8+40+16,2+40,"OFF",BLACK,LBBLUE,16,0);
+  637   2            else
+  638   2            LCD_ShowString(16+48+8+40+16,2+40,"OFF",LBBLUE,BLACK,16,0);
+  639   2        }
+  640   1        switch (i)
+  641   1        {
+  642   2          case 1 : set_alarm_value(&alarmv_table.Alarm_Range_out_a);      
+  643   2                    break;
+  644   2          case 2:  set_alarm_value(&alarmv_table.Alarm_Range_out_b);
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 11  
+
+  645   2                    break;
+  646   2          case 3:   set_alarm_state(&alarmv_table.Alarm_Range_out_state);     
+  647   2                    break;
+  648   2          case 4 : set_alarm_value(&alarma_table.Alarm_Range_out_a);      
+  649   2                    break;
+  650   2          case 5:  set_alarm_value(&alarma_table.Alarm_Range_out_b);
+  651   2                    break;
+  652   2          case 6:   set_alarm_state(&alarma_table.Alarm_Range_out_state);     
+  653   2                    break;
+  654   2        } 
+  655   1        if(sys_key_set.Key_short)
+  656   1        {
+  657   2          sys_key_set.Key_short=0;
+  658   2          beep_key(BTN_SET);
+  659   2          i++;
+  660   2          if(i>6)
+  661   2            i=1;
+  662   2        }                                             
+  663   1      }
+  664          
+  665          void fun_fong_style()    
+  666          { 
+  667   1        //digital-7,gungsuhche
+  668   1          static u8 i=1;
+  669   1          font_str(); 
+  670   1          LCD_ShowString(2,2," ",GREEN,BLACK,16,0);
+  671   1          if(sys_key_up.Key_short)
+  672   1            {
+  673   2              sys_key_up.Key_short=0;
+  674   2              beep_key(BTN_UP);
+  675   2                i--;
+  676   2              if(i<1)
+  677   2                i=4;
+  678   2            }
+  679   1            if(sys_key_down.Key_short)
+  680   1            {
+  681   2              sys_key_down.Key_short=0;
+  682   2              beep_key(BTN_DOWN);
+  683   2                  i++;
+  684   2              if(i>4)
+  685   2                i=1;
+  686   2            }
+  687   1          switch (i)
+  688   1          {
+  689   2            case 1 : LCD_ShowString(160-8*4,2,"F1",GREEN,BLACK,16,0);sys.font_style=40; break;
+  690   2            case 2:  LCD_ShowString(160-8*4,2,"F2",GREEN,BLACK,16,0);sys.font_style=41; break;
+  691   2            case 3:  LCD_ShowString(160-8*4,2,"F3",GREEN,BLACK,16,0);sys.font_style=42; break;
+  692   2            case 4:  LCD_ShowString(160-8*4,2,"F4",GREEN,BLACK,16,0);sys.font_style=43; break;
+  693   2          }                                   
+  694   1      }
+  695          void fun_font_color_v()    
+  696          { 
+  697   1          static u8 i=1;
+  698   1          font_str(); 
+  699   1          LCD_ShowString(2,22," ",GREEN,BLACK,16,0);
+  700   1          //LCD_ShowString(2,2," ",GREEN,BLACK,16,0);
+  701   1          if(sys_key_up.Key_short)
+  702   1            {
+  703   2              sys_key_up.Key_short=0;
+  704   2              beep_key(BTN_UP);
+  705   2                i--;
+  706   2              if(i<1)
+  707   2                i=15;
+  708   2            }
+  709   1            if(sys_key_down.Key_short)
+  710   1            {
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 12  
+
+  711   2              sys_key_down.Key_short=0;
+  712   2              beep_key(BTN_DOWN);
+  713   2                  i++;
+  714   2              if(i>15)
+  715   2                i=1;
+  716   2            }
+  717   1        switch (i)
+  718   1        {
+  719   2          case 1 : LCD_Fill(140,2+20,156,2+20+16,WHITE);sys.v_font_color=WHITE; break;
+  720   2          case 2:  LCD_Fill(140,2+20,156,2+20+16,BLUE);sys.v_font_color=BLUE;    break;
+  721   2          case 3:  LCD_Fill(140,2+20,156,2+20+16,GBLUE);sys.v_font_color=GBLUE;    break;
+  722   2          case 4:  LCD_Fill(140,2+20,156,2+20+16,RED);sys.v_font_color=RED;    break;
+  723   2          case 5:  LCD_Fill(140,2+20,156,2+20+16,MAGENTA);sys.v_font_color=MAGENTA;    break;
+  724   2          case 6:  LCD_Fill(140,2+20,156,2+20+16,GREEN);sys.v_font_color=GREEN;    break;
+  725   2          case 7:  LCD_Fill(140,2+20,156,2+20+16,YELLOW);sys.v_font_color=YELLOW;    break;
+  726   2          case 8:  LCD_Fill(140,2+20,156,2+20+16,BROWN);sys.v_font_color=BROWN;    break;
+  727   2          case 9:  LCD_Fill(140,2+20,156,2+20+16,BRRED);sys.v_font_color=BRRED;    break;
+  728   2          case 10: LCD_Fill(140,2+20,156,2+20+16,GRAY);sys.v_font_color=GRAY;    break;
+  729   2          case 11: LCD_Fill(140,2+20,156,2+20+16,DARKBLUE);sys.v_font_color=DARKBLUE;    break;
+  730   2          case 12: LCD_Fill(140,2+20,156,2+20+16,LIGHTBLUE);sys.v_font_color=LIGHTBLUE;    break;
+  731   2          case 13: LCD_Fill(140,2+20,156,2+20+16,GRAYBLUE);sys.v_font_color=GRAYBLUE;    break;
+  732   2          case 14: LCD_Fill(140,2+20,156,2+20+16,LIGHTGREEN);sys.v_font_color=LIGHTGREEN;    break;
+  733   2          case 15: LCD_Fill(140,2+20,156,2+20+16,LGRAY);sys.v_font_color=LGRAY;    break;
+  734   2        }                                             
+  735   1      }
+  736          void fun_font_color_a()    
+  737          { 
+  738   1          static u8 i=1;
+  739   1          font_str(); 
+  740   1          LCD_ShowString(2,22," ",GREEN,BLACK,16,0);
+  741   1          LCD_ShowString(2,2," ",GREEN,BLACK,16,0);
+  742   1          if(sys_key_up.Key_short)
+  743   1            {
+  744   2              sys_key_up.Key_short=0;
+  745   2              beep_key(BTN_UP);
+  746   2                i--;
+  747   2              if(i<1)
+  748   2                i=15;
+  749   2            }
+  750   1            if(sys_key_down.Key_short)
+  751   1            {
+  752   2              sys_key_down.Key_short=0;
+  753   2              beep_key(BTN_DOWN);
+  754   2                  i++;
+  755   2              if(i>15)
+  756   2                i=1;
+  757   2            }
+  758   1        switch (i)
+  759   1        {
+  760   2          case 1 : LCD_Fill(140,2+40,156,2+40+16,WHITE);sys.a_font_color=WHITE; break;
+  761   2          case 2:  LCD_Fill(140,2+40,156,2+40+16,BLUE);sys.a_font_color=BLUE;    break;
+  762   2          case 3:  LCD_Fill(140,2+40,156,2+40+16,GBLUE);sys.a_font_color=GBLUE;    break;
+  763   2          case 4:  LCD_Fill(140,2+40,156,2+40+16,RED);sys.a_font_color=RED;    break;
+  764   2          case 5:  LCD_Fill(140,2+40,156,2+40+16,MAGENTA);sys.a_font_color=MAGENTA;    break;
+  765   2          case 6:  LCD_Fill(140,2+40,156,2+40+16,GREEN);sys.a_font_color=GREEN;    break;
+  766   2          case 7:  LCD_Fill(140,2+40,156,2+40+16,YELLOW);sys.a_font_color=YELLOW;    break;
+  767   2          case 8:  LCD_Fill(140,2+40,156,2+40+16,BROWN);sys.a_font_color=BROWN;    break;
+  768   2          case 9:  LCD_Fill(140,2+40,156,2+40+16,BRRED);sys.a_font_color=BRRED;    break;
+  769   2          case 10: LCD_Fill(140,2+40,156,2+40+16,GRAY);sys.a_font_color=GRAY;    break;
+  770   2          case 11: LCD_Fill(140,2+40,156,2+40+16,DARKBLUE);sys.a_font_color=DARKBLUE;    break;
+  771   2          case 12: LCD_Fill(140,2+40,156,2+40+16,LIGHTBLUE);sys.a_font_color=LIGHTBLUE;    break;
+  772   2          case 13: LCD_Fill(140,2+40,156,2+40+16,GRAYBLUE);sys.a_font_color=GRAYBLUE;    break;
+  773   2          case 14: LCD_Fill(140,2+40,156,2+40+16,LIGHTGREEN);sys.a_font_color=LIGHTGREEN;    break;
+  774   2          case 15: LCD_Fill(140,2+40,156,2+40+16,LGRAY);sys.a_font_color=LGRAY;    break;
+  775   2        }                                             
+  776   1      }
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 13  
+
+  777          void fun_b33()    
+  778          { 
+  779   1      
+  780   1      }
+  781          
+  782          void fun_b34()    
+  783          {   
+  784   1      }
+  785          /*********第0层***********/
+  786          void fun_0()
+  787          {
+  788   1      
+  789   1      
+  790   1        switch (sys.display)
+  791   1        {
+  792   2            case 1 :
+  793   2                    if(display1_state==1)
+  794   2                    {
+  795   3                      LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  796   3                      display1_state=0;
+  797   3                      display2_state=1;
+  798   3                    }
+  799   2                    LCD_ShowChinese(0,8,"铃",sys.v_font_color,BLACK,24,0);
+  800   2                    LCD_ShowChinese(0,48,"铃",sys.a_font_color,BLACK,24,0);
+  801   2                    #ifdef DC40V
+  802   2      //              sys.voltage=4000;
+  803   2      //              sys.current=5000;
+  804   2                    LCD_ShowFloatNum(30,0,sys.voltage,4,2,sys.v_font_color,BLACK,sys.font_style); //电压
+  805   2                    LCD_ShowFloatNum(30,40,sys.current,4,3,sys.a_font_color,BLACK,sys.font_style); //电流
+  806   2                    #endif
+  807   2                    #ifdef DC400V
+                             LCD_ShowFloatNum(2,0,sys.voltage,4,1,sys.v_font_color,BLACK,sys.font_style); //电压
+                             #endif  
+  810   2                      LCD_ShowChar1(135,10,95+(sys.font_style%40*2),sys.v_font_color,BLACK,24,0);//V
+*** WARNING C188 IN LINE 810 OF middle\MENU\multi_menu.c: 'parameter 3': value truncated
+  811   2                      LCD_ShowChar1(135,50,96+(sys.font_style%40*2),sys.a_font_color,BLACK,24,0);//A
+*** WARNING C188 IN LINE 811 OF middle\MENU\multi_menu.c: 'parameter 3': value truncated
+  812   2                      alarm_update(); //
+  813   2                    break;
+  814   2            case 2:  
+  815   2                    if(display2_state==1)
+  816   2                    {
+  817   3                      LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  818   3                      display1_state=1;
+  819   3                      display2_state=0;
+  820   3                    }
+  821   2                  
+  822   2                    #ifdef DC40V
+  823   2                    LCD_ShowFloatNum(2,16,sys.voltage,4,2,sys.v_font_color,BLACK,48); //电压
+  824   2                    #endif
+  825   2                    #ifdef DC400V
+                             LCD_ShowFloatNum(2,16,sys.voltage,4,1,sys.v_font_color,BLACK,48); //电压
+                             #endif  
+  828   2                    LCD_ShowChar1(28*5+6,36,95,BLACK,sys.v_font_color,24,0);//V    
+  829   2                    break;
+  830   2      //    case 3:  
+  831   2      //      
+  832   2      //              wave(GetAdcAverage(1),1);
+  833   2      //              break;
+  834   2        } 
+  835   1      
+  836   1      }
+  837            u8 isEditableFunction(u8 index) {
+  838   1            //return (index < 24 || index > 30);
+  839   1          return (func_index!=24)&&(func_index!=25)&&(func_index!=26)&&(func_index!=27)&&(func_index!=28)&&(func_
+             -index!=29)&&(func_index!=30);
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 14  
+
+  840   1        }
+*** WARNING C47 IN LINE 837 OF middle\MENU\multi_menu.c: 'index': unreferenced parameter
+  841          void menu_update()
+  842          {
+  843   1        static u8 flag_Key_set_long=1;
+  844   1          if(sys_key_up.Key_short&&isEditableFunction(func_index))
+  845   1          {
+  846   2            Key_value_init();
+  847   2            beep_key(BTN_UP);
+  848   2            func_index = table[func_index].up;    //向上翻
+  849   2            if(func_index==14||func_index==15)
+  850   2            LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  851   2            if(func_index==0)
+  852   2            {
+  853   3            sys.display++;
+  854   3            if(sys.display>2)
+  855   3            sys.display=1;
+  856   3            }
+  857   2          }
+  858   1          if(sys_key_down.Key_short&&isEditableFunction(func_index))
+  859   1          {
+  860   2            Key_value_init();
+  861   2            beep_key(BTN_DOWN);
+  862   2            if(func_index==14||func_index==15)
+  863   2            LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  864   2            func_index = table[func_index].down;    //向下翻
+  865   2            if(func_index==0)
+  866   2            {
+  867   3            sys.display--;
+  868   3            if(sys.display<1)
+  869   3            sys.display=2;  
+  870   3            }
+  871   2          }
+  872   1            if(func_index!=0)
+  873   1            {
+  874   2              display1_state=1;
+  875   2              display2_state=1;
+  876   2            }
+  877   1          if(sys_key_set.Key_short&&(func_index!=12)&&(func_index!=13)&&(func_index!=27)&&(func_index!=28)&&(func
+             -_index!=29)&&(func_index!=30))
+  878   1          {
+  879   2            Key_value_init();
+  880   2            beep_key(BTN_SET);
+  881   2            func_index = table[func_index].enter;    //确认
+  882   2            LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  883   2            
+  884   2          }
+  885   1          if(sys_key_set.Key_long&&(func_index==0)&&flag_Key_set_long)
+  886   1          {
+  887   2      //      flag_Key_set_long=0;
+  888   2      //      Key_value_init();
+  889   2      //      beep_key(BTN_SET);
+  890   2      //      func_index = table[func_index].enter;    //设置
+  891   2      //      LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  892   2          }
+  893   1           if(KEY_SET)//按键释放
+  894   1           {
+  895   2             flag_Key_set_long=1;   
+  896   2             sys_key_set.Key_long=0; 
+  897   2           }
+  898   1           if(sys_key_return.Key_short)
+  899   1            {
+  900   2              sys_key_return.Key_short=0;
+  901   2              beep_key(BTN_SET);
+  902   2              func_index = table[func_index].return_key;    //返回
+  903   2              if(func_index==0)
+C251 COMPILER V5.60.0,  multi_menu                                                         29/10/24  08:37:10  PAGE 15  
+
+  904   2                sys_EEPROM_write();//
+  905   2              LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  906   2              display1_state=1;
+  907   2              display2_state=1;
+  908   2                
+  909   2            }
+  910   1            if ((func_index != last_index)&&(func_index>0))
+  911   1            {
+  912   2              current_operation_index = table[func_index].current_operation;
+  913   2              if(0<func_index<9)
+  914   2              LCD_Fill(0,0,16,80,BLACK);
+  915   2              else
+  916   2              LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+  917   2              (*current_operation_index)();//执行当前操作函数
+  918   2              last_index = func_index;
+  919   2            }
+  920   1            if(func_index==0||!isEditableFunction(func_index))
+  921   1            {
+  922   2                    current_operation_index = table[func_index].current_operation;
+  923   2                    (*current_operation_index)();//执行当前操作函数
+  924   2                    last_index = func_index;
+  925   2            }
+  926   1            
+  927   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =      8646     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =       238     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =       526     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  3 WARNING(S),  0 ERROR(S)

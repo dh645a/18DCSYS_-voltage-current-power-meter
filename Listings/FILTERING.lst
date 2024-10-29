@@ -1,0 +1,38 @@
+C251 COMPILER V5.60.0,  FILTERING                                                          29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE FILTERING
+OBJECT MODULE PLACED IN .\Output\FILTERING.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE middle\FILTERING\FILTERING.C XSMALL BROWSE INCDIR(..\COMM;
+                    -.\base;.\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI
+                    -;.\base\PWM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\FILTERING.lst) TABS(2) OBJEC
+                    -T(.\Output\FILTERING.obj) 
+
+stmt  level    source
+
+    1          #include "bsp_adc.h"
+    2          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =    ------     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

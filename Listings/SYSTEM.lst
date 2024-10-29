@@ -1,0 +1,167 @@
+C251 COMPILER V5.60.0,  SYSTEM                                                             29/10/24  08:37:09  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE SYSTEM
+OBJECT MODULE PLACED IN .\Output\SYSTEM.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE Src\SYSTEM.C XSMALL BROWSE INCDIR(..\COMM;.\base;.\base\LC
+                    -D;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PWM;.\ba
+                    -se\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\SYSTEM.lst) TABS(2) OBJECT(.\Output\SYSTEM.o
+                    -bj) 
+
+stmt  level    source
+
+    1          #include "system.h"
+    2          #include "base_key.h" 
+    3          #include "lcd.h" 
+    4          #include "adjust.h"
+    5          #include "STC32G_EEPROM.h"
+    6          #include "alarm.h"
+    7          SYS sys;//智能电压表
+    8          uint8_t EE_Data[30];
+    9          
+   10          void sys_control_Init()
+   11          {
+   12   1        sys.v_font_color=RED;
+   13   1        sys.a_font_color=GREEN;
+   14   1        sys.font_style=40;
+   15   1        sys.adc_state=0;
+   16   1        sys.adc_data=0;
+   17   1        sys.voltage=0;
+   18   1        sys.current=0;
+   19   1        sys.language=chinese;
+   20   1        sys.display=0;
+   21   1      }
+   22          void sys_EEPROM_datainit(void)//EEPROM
+   23          {
+   24   1            alarmv_table.Alarm_H=4100;
+   25   1            alarmv_table.Alarm_H_state=0;
+   26   1            alarmv_table.Alarm_L=0;
+   27   1            alarmv_table.Alarm_L_state=0; 
+   28   1            alarmv_table.Alarm_Range_in_a=4200;
+   29   1            alarmv_table.Alarm_Range_in_b=4300;
+   30   1            alarmv_table.Alarm_Range_in_state=0;
+   31   1            alarma_table.Alarm_H=4100;
+   32   1            alarma_table.Alarm_H_state=0;
+   33   1            alarma_table.Alarm_L=0;
+   34   1            alarma_table.Alarm_L_state=0; 
+   35   1            alarma_table.Alarm_Range_in_a=4200;
+   36   1            alarma_table.Alarm_Range_in_b=4300;
+   37   1            alarma_table.Alarm_Range_in_state=0;
+   38   1            adjustv.factor=10000;
+   39   1            adjusta.factor=10000;
+   40   1            sys.language=english;
+   41   1            sys.v_font_color=RED;
+   42   1            sys.a_font_color=GREEN;
+   43   1            sys.display=1;
+   44   1            EE_Data[3] =  alarmv_table.Alarm_H;
+   45   1            EE_Data[4] =  alarmv_table.Alarm_H_state;
+   46   1            EE_Data[5] =  alarmv_table.Alarm_L;
+   47   1            EE_Data[6] =  alarmv_table.Alarm_L_state;
+   48   1            EE_Data[7] =  (u8)alarmv_table.Alarm_L;
+   49   1            EE_Data[8] =  alarmv_table.Alarm_L_state;
+   50   1            EE_Data[9] =  (u8)(alarmv_table.Alarm_Range_in_a >> 8);
+   51   1            EE_Data[10] = (u8)alarmv_table.Alarm_Range_in_a;
+   52   1            EE_Data[11] = (u8)(alarmv_table.Alarm_Range_in_b >> 8);
+   53   1            EE_Data[12] = (u8)alarmv_table.Alarm_Range_in_b;
+   54   1            EE_Data[13] = alarmv_table.Alarm_Range_in_state;
+   55   1            EE_Data[14] = (u8)(sys.v_font_color >> 8);
+   56   1            EE_Data[15] = (u8)sys.v_font_color;     
+C251 COMPILER V5.60.0,  SYSTEM                                                             29/10/24  08:37:09  PAGE 2   
+
+   57   1            EE_Data[16] = (u8)(adjustv.factor >> 8);
+   58   1            EE_Data[17] = (u8)adjustv.factor;
+   59   1            EE_Data[18] = (u8)sys.language;
+   60   1            EE_Data[19] =sys.display;
+   61   1            EE_Data[24] = (u8)(adjusta.factor >> 8);
+   62   1            EE_Data[25] = (u8)adjusta.factor; 
+   63   1            EE_Data[26] = (u8)(sys.a_font_color >> 8);
+   64   1            EE_Data[27] = (u8)sys.a_font_color;     
+   65   1      }
+   66          void sys_EEPROM_write(void)//EEPROM
+   67          {
+   68   1            EEPROM_read_n(EE_ADDRESS,EE_Data,30);
+   69   1            EE_Data[3] =  (u8)(alarmv_table.Alarm_H >> 8);
+   70   1            EE_Data[4] =  (u8)alarmv_table.Alarm_H;
+   71   1            EE_Data[5] =  alarmv_table.Alarm_H_state;
+   72   1            EE_Data[6] =  (u8)(alarmv_table.Alarm_L >> 8);
+   73   1            EE_Data[7] =  (u8)alarmv_table.Alarm_L;
+   74   1            EE_Data[8] =  alarmv_table.Alarm_L_state;
+   75   1            EE_Data[9] =  (u8)(alarmv_table.Alarm_Range_in_a >> 8);
+   76   1            EE_Data[10] = (u8)alarmv_table.Alarm_Range_in_a;
+   77   1            EE_Data[11] = (u8)(alarmv_table.Alarm_Range_in_b >> 8);
+   78   1            EE_Data[12] = (u8)alarmv_table.Alarm_Range_in_b;
+   79   1            EE_Data[13] = alarmv_table.Alarm_Range_in_state;
+   80   1            EE_Data[14] = (u8)(sys.v_font_color >> 8);
+   81   1            EE_Data[15] = (u8)sys.v_font_color;
+   82   1            EE_Data[16] = (u8)(adjustv.factor >> 8);
+   83   1            EE_Data[17] = (u8)adjustv.factor; 
+   84   1            EE_Data[18] = (u8)sys.language;
+   85   1            EE_Data[19] = sys.display;
+   86   1            EE_Data[24] = (u8)(adjusta.factor >> 8);
+   87   1            EE_Data[25] = (u8)adjusta.factor;
+   88   1            EE_Data[26] = (u8)(sys.a_font_color >> 8);
+   89   1            EE_Data[27] = (u8)sys.a_font_color; 
+   90   1                
+   91   1            EEPROM_SectorErase(EE_ADDRESS); //擦除扇区
+   92   1            EEPROM_write_n(EE_ADDRESS,EE_Data,30);//保存
+   93   1      }
+   94          void sys_EEPROM_read(void)//EEPROM
+   95          {
+   96   1            EEPROM_read_n(EE_ADDRESS,EE_Data,30);
+   97   1            adjustv.adc_standard = ((u16)EE_Data[0] << 8) + EE_Data[1]; //
+   98   1            adjustv.state=EE_Data[2];
+   99   1            alarmv_table.Alarm_H=((u16)EE_Data[3] << 8) + EE_Data[4];
+  100   1            alarmv_table.Alarm_H_state=EE_Data[5];
+  101   1            alarmv_table.Alarm_L=((u16)EE_Data[6] << 8) + EE_Data[7];
+  102   1            alarmv_table.Alarm_L_state=EE_Data[8];
+  103   1            alarmv_table.Alarm_Range_in_a=((u16)EE_Data[9] << 8) + EE_Data[10]; 
+  104   1            alarmv_table.Alarm_Range_in_b=((u16)EE_Data[11] << 8) + EE_Data[12]; 
+  105   1            alarmv_table.Alarm_Range_in_state=EE_Data[13];
+  106   1            sys.v_font_color=((u16)EE_Data[14] << 8) + EE_Data[15];
+  107   1            adjustv.factor=((u16)EE_Data[16] << 8) + EE_Data[17];
+  108   1            sys.language=EE_Data[18];
+  109   1            sys.display=EE_Data[19];
+  110   1            adjusta.adc_tare = ((u16)EE_Data[20] << 8) + EE_Data[21]; //
+  111   1            adjusta.adc_standard = ((u16)EE_Data[22] << 8) + EE_Data[23]; //
+  112   1            adjusta.factor=((u16)EE_Data[24] << 8) + EE_Data[25];
+  113   1            sys.a_font_color=((u16)EE_Data[26] << 8) + EE_Data[27];
+  114   1            adjustv.adc_tare = ((u16)EE_Data[28] << 8) + EE_Data[29]; //
+  115   1      }
+  116          void power(void)//电源状态
+  117          {
+  118   1      
+  119   1      }
+  120          
+  121          
+  122          
+C251 COMPILER V5.60.0,  SYSTEM                                                             29/10/24  08:37:09  PAGE 3   
+
+  123          
+  124          
+  125          
+  126          
+  127          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       756     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        44     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

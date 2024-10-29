@@ -1,0 +1,22 @@
+".\Output\main.obj",
+".\Output\stc32_it.obj",
+".\Output\SYSTEM.obj",
+".\Output\CONFIG.obj",
+".\Output\lcd.obj",
+".\Output\Adjust.obj",
+".\Output\multi_menu.obj",
+".\Output\WAVE.obj",
+".\Output\ALARM.obj",
+".\Output\FILTERING.obj",
+".\Output\lcd_init.obj",
+".\Output\bsp_adc.obj",
+".\Output\base_key.obj",
+".\Output\TIME.obj",
+".\Output\spi.obj",
+".\Output\PWM.obj",
+".\Output\BUZZER.obj",
+".\Output\STC32G_EEPROM.obj" 
+TO ".\Output\project" 
+PRINT(".\Listings\project.map") CASE 
+CLASSES (EDATA (0x0-0x7FF), 
+HDATA (0x0-0x7FF)) 

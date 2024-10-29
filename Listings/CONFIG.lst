@@ -1,0 +1,49 @@
+C251 COMPILER V5.60.0,  CONFIG                                                             29/10/24  08:37:09  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE CONFIG
+OBJECT MODULE PLACED IN .\Output\CONFIG.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE base\CONFIG.C XSMALL BROWSE INCDIR(..\COMM;.\base;.\base\L
+                    -CD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PWM;.\b
+                    -ase\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\CONFIG.lst) TABS(2) OBJECT(.\Output\CONFIG.
+                    -obj) 
+
+stmt  level    source
+
+    1          /*********************************************************************************
+    2           * COPYRIGHT NOTICE
+    3           * All rights reserved.
+    4           *
+    5           * 文件名   : config.h
+    6           * 描述     : 系统配置
+    7           *
+    8           * 版本     : V1.0
+    9           * 作者     : 浩
+   10           * 日期     : 2023-12-22
+   11           * 
+   12          **********************************************************************************/
+   13          #include "config.h"   //引入自定义公共头文件
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =    ------     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,205 @@
+C251 COMPILER V5.60.0,  bsp_adc                                                            29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE bsp_adc
+OBJECT MODULE PLACED IN .\Output\bsp_adc.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE base\adc\bsp_adc.c XSMALL BROWSE INCDIR(..\COMM;.\base;.\b
+                    -ase\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PW
+                    -M;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\bsp_adc.lst) TABS(2) OBJECT(.\Output\b
+                    -sp_adc.obj) 
+
+stmt  level    source
+
+    1          #include "bsp_adc.h"
+    2          #include "system.h"
+    3          /**
+    4            * @brief  ADC GPIO 初始化
+    5            * @param  无
+    6            * @retval 无
+    7            */
+    8          /**
+    9            * @brief  ADC配置函数.
+   10            * @param  无
+   11            * @retval 无
+   12            */
+   13          static void APP_AdcConfig(void)
+   14          {
+   15   1          ADCTIM = 0x2A;    //设置 ADC 内部时序，ADC采样时间建议设最大值
+   16   1          ADCCFG = 0x2f;    //设置 ADC 时钟为系统时钟/2/16/16  //采样速度 
+   17   1          ADC_CONTR = 0x80; //使能 ADC 模块
+   18   1      }
+   19          /**
+   20            * @brief  ADC校准函数.
+   21            * @param  无
+   22            * @retval 无
+   23            */
+   24          void APP_AdcCalibrate(void)
+   25          {
+   26   1      
+   27   1      }
+   28          
+   29          /**
+   30            * @brief  ADC使能函数
+   31            * @param  无
+   32            * @retval 无
+   33            */
+   34           void APP_AdcEnable(void)
+   35          {
+   36   1      }
+   37          
+   38          /**
+   39            * @brief  ADC初始化
+   40            * @param  无
+   41            * @retval 无
+   42            */
+   43          void ADCx_Init(void)
+   44          {
+   45   1        APP_AdcConfig();
+   46   1        ADC_CONTR = (ADC_CONTR & 0xf0) | 7; //设置ADC转换通道 ADC7
+   47   1        
+   48   1      }
+   49          u16 Get_ADC12bitResult_a()  //
+   50          {
+   51   1        ADC_START = 1;//启动ADC转换
+   52   1          _nop_();
+   53   1          _nop_();
+   54   1          _nop_();
+   55   1          _nop_();
+   56   1          _nop_();
+C251 COMPILER V5.60.0,  bsp_adc                                                            29/10/24  08:37:10  PAGE 2   
+
+   57   1          _nop_();
+   58   1          _nop_();
+   59   1          _nop_();
+   60   1            _nop_();
+   61   1          _nop_();
+   62   1          _nop_();
+   63   1          _nop_();
+   64   1          while(ADC_FLAG == 0);   //wait for ADC finish
+   65   1          ADC_FLAG = 0;     //清除ADC结束标志
+   66   1          return  (((u16)ADC_RES << 8) | ADC_RESL);
+   67   1      }
+   68          u16 Get_ADC12bitResult(u8 channel)  //channel = 0~15
+   69          {
+   70   1          ADC_RES = 0;
+   71   1          ADC_RESL = 0;
+   72   1      
+   73   1        ADC_CONTR = (ADC_CONTR & 0xf0) | channel; //设置ADC转换通道
+   74   1        ADC_START = 1;//启动ADC转换
+   75   1          _nop_();
+   76   1          _nop_();
+   77   1          _nop_();
+   78   1          _nop_();
+   79   1      
+   80   1          while(ADC_FLAG == 0);   //wait for ADC finish
+   81   1          ADC_FLAG = 0;     //清除ADC结束标志
+   82   1          return  (((u16)ADC_RES << 8) | ADC_RESL);
+   83   1      }
+   84          #define N 11
+   85          uint16_t filter()//中位值滤波
+   86          {
+   87   1          uint16_t value_buf[N];
+   88   1          uint16_t count, i, j, temp;
+   89   1          for(count = 0; count < N; count ++) //获取采样值
+   90   1          {
+   91   2              value_buf[count] = Get_ADC12bitResult_a();
+   92   2          }
+   93   1          for(j = 0; j < (N-1); j++)
+   94   1          {
+   95   2              for(i = 0; i < (N-j); i++)
+   96   2              {
+   97   3                  if(value_buf[i] > value_buf[i+1])
+   98   3                  {
+   99   4                      temp = value_buf[i];
+  100   4                      value_buf[i] = value_buf[i+1];
+  101   4                      value_buf[i+1] = temp;
+  102   4                  }
+  103   3              }
+  104   2          }
+  105   1          return value_buf[(N-1)/2];
+  106   1          //return value_buf[(N+5)/2];
+  107   1      }
+  108          uint16_t GetAdcAverage(uint16_t times)//取多次ADC平均值
+  109          {
+  110   1         uint32_t temp_val = 0;
+  111   1         uint16_t t;
+  112   1         for(t = 0; t < times; t++) 
+  113   1          { 
+  114   2      //         ADC_START = 1;//启动ADC转换
+  115   2      //          _nop_();
+  116   2      //          _nop_();
+  117   2      //          _nop_();
+  118   2      //          _nop_();
+  119   2      //          while(ADC_FLAG == 0);   //wait for ADC finish
+  120   2      //          ADC_FLAG = 0;     //清除ADC结束标志
+  121   2      //          /* 获取ADC转换数据 */
+  122   2      //          temp_adc = ((u16)ADC_RES << 8) | ADC_RESL;
+C251 COMPILER V5.60.0,  bsp_adc                                                            29/10/24  08:37:10  PAGE 3   
+
+  123   2                temp_val+=filter();   
+  124   2          }
+  125   1          temp_val=(temp_val+90)/times;
+  126   1      //    sys.adc_data=temp_val / times;
+  127   1      //    sys.adc_state=1;
+  128   1          return  temp_val;
+  129   1          
+  130   1      }
+  131          uint16_t channel_GetAdcAverage(u8 channel,uint16_t times)//(通道,取多次ADC平均值)
+  132          {
+  133   1      //   uint32_t temp_val = 0;
+  134   1      //   uint16_t t,temp_adc;
+  135   1      //   ADC_RES = 0;
+  136   1      //   ADC_RESL = 0;
+  137   1      
+  138   1         ADC_CONTR = (ADC_CONTR & 0xf0) | channel; //设置ADC转换通道
+  139   1                _nop_();
+  140   1                _nop_();
+  141   1                _nop_();
+  142   1                _nop_();
+  143   1                  _nop_();
+  144   1                _nop_();
+  145   1                _nop_();
+  146   1                _nop_();
+  147   1                  _nop_();
+  148   1                _nop_();
+  149   1                _nop_();
+  150   1                _nop_();
+  151   1                  _nop_();
+  152   1                _nop_();
+  153   1                _nop_();
+  154   1                _nop_();
+  155   1                  _nop_();
+  156   1                _nop_();
+  157   1                _nop_();
+  158   1                _nop_();
+  159   1                  _nop_();
+  160   1                _nop_();
+  161   1                _nop_();
+  162   1                _nop_();
+  163   1          return GetAdcAverage(times);
+  164   1      }
+  165          /*********************************************END OF FILE**********************/
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       292     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------         26
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

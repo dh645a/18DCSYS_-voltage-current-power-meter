@@ -1,0 +1,136 @@
+C251 COMPILER V5.60.0,  Adjust                                                             29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE Adjust
+OBJECT MODULE PLACED IN .\Output\Adjust.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE middle\Adjust\Adjust.C XSMALL BROWSE INCDIR(..\COMM;.\base
+                    -;.\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\bas
+                    -e\PWM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\Adjust.lst) TABS(2) OBJECT(.\Outpu
+                    -t\Adjust.obj) 
+
+stmt  level    source
+
+    1          #include "adjust.h"
+    2          #include "base_key.h"
+    3          #include "lcd.h"
+    4          #include "bsp_adc.h"
+    5          #include "base_key.h"
+    6          #include "STC32G_EEPROM.h"
+    7          #include "config.h"
+    8          #include "system.h"
+    9          #include "main.h"
+   10          #include "lcd.h"
+   11          #include "lcd_init.h"
+   12          Adjust adjustv;
+   13          Adjust adjusta;
+   14          void adjust_Init(void)
+   15          {
+   16   1        //adjustv.adc_tare=0;
+   17   1      //  adjustv.standard=40000000;
+   18   1      //  //adjusta.adc_tare=0;
+   19   1      //  adjusta.standard=40000000;
+   20   1        while(adjustv.state)
+   21   1        {
+   22   2          adjust_menu();
+   23   2        }
+   24   1        
+   25   1      }
+   26          u16 linear_function(u16 x1,u16 y1,u16 x2,u16 y2,u16 x,float k_t,u16 k_adj )//y=kx+b,k_t温度系数,k_adj校准
+             -系数
+   27          {
+   28   1        float k=0.0000,b=0.0000,dat=0.0000;//y=kx+b
+   29   1        k = (y2 -  y1)*1.000/(x2-x1);//求出斜率k
+   30   1        b=y1-(x1*k);//求出b
+   31   1        dat = (x*k+b)*k_adj/10000/k_t;//
+   32   1        if(dat<0)
+   33   1        dat = 0;
+   34   1        return (unsigned int)dat;  
+   35   1      }
+   36          void adjust_menu()
+   37          {
+   38   1          static u8 keyset_sum=0;
+   39   1          LCD_ShowString(40,0,"adjust",RED,BLACK,16,0);
+   40   1          LCD_ShowString(0,16,"give the voltage",RED,BLACK,16,0);
+   41   1          #ifdef DC40V
+   42   1          LCD_ShowString(0,32,"as 40.00v ",RED,BLACK,16,0);
+   43   1          #endif
+   44   1          #ifdef DC40V0
+                   LCD_ShowString(0,32,"as 400.0v ",RED,BLACK,16,0);
+                   #endif
+   47   1          LCD_ShowString(0,48,"then press SET",RED,BLACK,16,0);
+   48   1          //LCD_ShowChinese(130,50,"铃",RED,BLACK,24,0);
+   49   1          if(sys_key_set.Key_short||sys_key_return.Key_short)//检测到键短按
+   50   1          {
+   51   2            Key_value_init();
+   52   2            //beep_key(BTN_SET);
+   53   2            keyset_sum++;
+   54   2            switch(keyset_sum)
+   55   2            {
+C251 COMPILER V5.60.0,  Adjust                                                             29/10/24  08:37:10  PAGE 2   
+
+   56   3              case 1:  // 第一次短按
+   57   3                    LCD_ShowString(152,0,"-",RED,BLACK,16,0);
+   58   3                    adjustv.adc_tare=channel_GetAdcAverage(7,100);
+   59   3                    adjusta.adc_tare=channel_GetAdcAverage(0,100);//取多次ADC平均值;
+   60   3                    break;
+   61   3              case 2: // 第二次短按
+   62   3                    adjustv.adc_standard=channel_GetAdcAverage(7,100);//取多次ADC平均值;
+   63   3                    adjusta.adc_standard=channel_GetAdcAverage(0,100);//取多次ADC平均值;
+   64   3                    adjustv.state=0;
+   65   3                    EEPROM_read_n(EE_ADDRESS,EE_Data,30);
+   66   3                    EE_Data[0] = (u8)(adjustv.adc_standard >> 8);
+   67   3                    EE_Data[1] = (u8)adjustv.adc_standard;
+   68   3                    EE_Data[2] =  adjustv.state;
+   69   3                    EE_Data[20] = (u8)(adjusta.adc_tare >> 8);
+   70   3                    EE_Data[21] = (u8)adjusta.adc_tare;
+   71   3                    EE_Data[22] = (u8)(adjusta.adc_standard >> 8);
+   72   3                    EE_Data[23] = (u8)adjusta.adc_standard; 
+   73   3                    EE_Data[28] = (u8)(adjustv.adc_tare >> 8);
+   74   3                    EE_Data[29] = (u8)adjustv.adc_tare;   
+   75   3                    sys_EEPROM_datainit();
+   76   3                    EEPROM_SectorErase(EE_ADDRESS); //擦除扇区
+   77   3                    EEPROM_write_n(EE_ADDRESS,EE_Data,30);//保存
+   78   3                    keyset_sum=0;
+   79   3                    LCD_ShowString(152,0," ",RED,BLACK,16,0);
+   80   3                    break;
+   81   3              default :   break;         //  当所有选择皆不成立，则进入预设区块。
+   82   3            }
+   83   2          }
+   84   1          if(T0_Count>60000)
+   85   1          adjustv.state=0;  
+   86   1          if(adjustv.state==0)
+   87   1          LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+   88   1      }
+   89          void adjust_reset()
+   90          {
+   91   1          if(sys_key_set.Key_short||sys_key_set.Key_long)//检测到键短按
+   92   1          {
+   93   2            Key_value_init();
+   94   2            //beep_key(BTN_SET);
+   95   2            adjustv.state=1;
+   96   2          }
+   97   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       608     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        23          8
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        59     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

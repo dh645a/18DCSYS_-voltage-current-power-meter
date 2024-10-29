@@ -1,0 +1,194 @@
+C251 COMPILER V5.60.0,  main                                                               29/10/24  08:37:09  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE main
+OBJECT MODULE PLACED IN .\Output\main.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE Src\main.c XSMALL BROWSE INCDIR(..\COMM;.\base;.\base\LCD;
+                    -.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PWM;.\base
+                    -\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\main.lst) TABS(2) OBJECT(.\Output\main.obj) 
+
+stmt  level    source
+
+    1          /*---------------------------------------------------------------------*/
+    2          /* --- STC MCU Limited ------------------------------------------------*/
+    3          /* --- STC 1T Series MCU Demo Programme -------------------------------*/
+    4          /* --- Mobile: (86)13922805190 ----------------------------------------*/
+    5          /* --- Fax: 86-0513-55012956,55012947,55012969 ------------------------*/
+    6          /* --- Tel: 86-0513-55012928,55012929,55012966 ------------------------*/
+    7          /* --- Web: www.STCAI.com ---------------------------------------------*/
+    8          /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
+    9          /* --- BBS: www.STCAIMCU.com  -----------------------------------------*/
+   10          /* --- QQ:  800003751 -------------------------------------------------*/
+   11          /* Èç¹ûÒªÔÚ³ÌÐòÖÐÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌÐòÖÐ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌÐò            */
+   12          /*---------------------------------------------------------------------*/
+   13          
+   14          
+   15          /*************  ¹¦ÄÜËµÃ÷    **************
+   16          
+   17          ±¾Àý³Ì»ùÓÚSTC32GÎªÖ÷¿ØÐ¾Æ¬µÄÊµÑéÏä9.6°æ±¾½øÐÐ±àÐ´²âÊÔ¡£
+   18          
+   19          Ê¹ÓÃKeil C251±àÒëÆ÷£¬Memory ModelÍÆ¼öÉèÖÃXSmallÄ£Ê½£¬Ä¬ÈÏ¶¨Òå±äÁ¿ÔÚedata£¬µ¥Ê±ÖÓ´æÈ¡·ÃÎÊËÙ¶È¿ì¡£
+   20          
+   21          edata½¨Òé±£Áô1K¸ø¶ÑÕ»Ê¹ÓÃ£¬¿Õ¼ä²»¹»Ê±¿É½«´óÊý×é¡¢²»³£ÓÃ±äÁ¿¼Óxdata¹Ø¼ü×Ö¶¨Òåµ½xdata¿Õ¼ä¡£
+   22          
+   23          Çý¶¯LCD1602×Ö·ûÆÁ.
+   24          
+   25          ÏÔÊ¾Ð§¹ûÎª: LCDÏÔÊ¾Ê±¼ä.
+   26          
+   27          µÚÒ»ÐÐÏÔÊ¾ ---Clock demo---
+   28          µÚ¶þÐÐÏÔÊ¾     12-00-00
+   29          
+   30          
+   31          R179º¸½Ó0Å·µç×è£¬½«16PIN¶Ì½Óµ½GND.
+   32          
+   33          ÏÂÔØÊ±, Ñ¡ÔñÊ±ÖÓ 24MHz (ÓÃ»§¿É×ÔÐÐÐÞ¸ÄÆµÂÊ).
+   34          
+   35          ******************************************/
+   36          
+   37          #include "stc32g.h"       //°üº¬´ËÍ·ÎÄ¼þºó£¬²»ÐèÒªÔÙ°üº¬"reg51.h"Í·ÎÄ¼þ
+   38          #include "intrins.h"
+   39          #include "lcd_init.h"
+   40          #include "lcd.h"
+   41          #include "bsp_adc.h"
+   42          #include "time.h"
+   43          #include "main.h"
+   44          #include "base_key.h"  
+   45          #include "adjust.h"
+   46          #include "multi_menu.h"  
+   47          #include "system.h"
+   48          #include "pwm.h"
+   49          #include "spi.h"
+   50          #include "buzzer.h"
+   51          #include "math.h"
+   52          #include "adjust.h"
+   53          #include "STC32G_EEPROM.h"
+   54          /*************  Pin define  *****************************************************/
+   55          uint32_t T0_Count=0,temp_t0_count=0;
+   56          unsigned int Task_Delay[NumOfTask]={ 0 };  
+   57          uint32_t temp_adc;
+C251 COMPILER V5.60.0,  main                                                               29/10/24  08:37:09  PAGE 2   
+
+   58          uint16_t adc;
+   59          uint16_t temp_adcv,temp_adca;
+   60          void main(void)
+   61          {
+   62   1          WTST = 0;  //ÉèÖÃ³ÌÐòÖ¸ÁîÑÓÊ±²ÎÊý£¬¸³ÖµÎª0¿É½«CPUÖ´ÐÐÖ¸ÁîµÄËÙ¶ÈÉèÖÃÎª×î¿ì
+   63   1          EAXFR = 1; //À©Õ¹¼Ä´æÆ÷(XFR)·ÃÎÊÊ¹ÄÜ
+   64   1          CKCON = 0; //Ìá¸ß·ÃÎÊXRAMËÙ¶È
+   65   1          
+   66   1          P1M1 = 0x83;   P1M0 = 0x00;   //P1.7P1.1P1.0 Îª ADC ¸ß×èÊäÈë£¬ÆäÓàÉèÖÃÎª×¼Ë«Ïò¿Ú
+   67   1          P1SR|=0x7C;//¶Ë¿ÚËÙÂÊ
+   68   1          P3M1 = 0x00;   P3M0 = 0x18;   //ÉèÖÃP3.4¡¢P3.3ÎªÍÆÍì,ÆäÓàÎª×¼Ë«Ïò¿Ú
+   69   1          P3PU=0xE4;//°´¼üÉÏÀ­
+   70   1          //P3SR|=0xe0;//¶Ë¿ÚËÙÂÊ
+   71   1          ADCx_Init();
+   72   1          HAL_SPI_Init();
+   73   1          //SPI_init();
+   74   1          LCD_Init();//LCD³õÊ¼»¯
+   75   1          LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
+   76   1          sys_control_Init();
+   77   1          Timer0_init();
+   78   1          Init_buzzer();
+   79   1          //pwm_init_blk();
+   80   1          EA = 1;     //´ò¿ª×ÜÖÐ¶Ï
+   81   1          //beep(12000,6000,100,1);
+   82   1          sys_EEPROM_read();//¶ÁÈ¡EEPROMÊý¾Ý
+   83   1          delay_ms(5000);
+   84   1          adjust_reset();
+   85   1      
+   86   1          adjust_Init();//×¢Òâ´ø1·ÖÖÓËÀÑ­»·
+   87   1          while(1)
+   88   1          {
+   89   2      //            LCD_ShowChinese(40,0,"ÖÐ¾°Ô°µç×Ó",RED,BLACK,16,0);
+   90   2                  //LCD_ShowFloatNum1(10,60,temp_adc,5,GREEN,BLACK,16);
+   91   2                  //LCD_ShowIntNum(80,60,adjust_adj_a(),4,GREEN,BLACK,16);
+   92   2                  //LCD_ShowPicture(100,20,40,40,gImage_1);
+   93   2                  if (Task_Delay[0] == 0)
+   94   2                  {
+   95   3                    /* ÈÎÎñ 0 Ö÷ÌåTask(0); */
+   96   3                    /* ÈÎÎñ 0 ÑÓÊ± 1ms */
+   97   3                    //if(sys.adc_state==0)
+   98   3      
+   99   3                    Task_Delay[0] = 10;
+  100   3                  }
+  101   2      
+  102   2                  if (Task_Delay[1] == 0)
+  103   2                  {
+  104   3                    /* ÈÎÎñ 1 Ö÷ÌåTask(1); */
+  105   3                    /* ÈÎÎñ 1 ÑÓÊ± 50ms */
+  106   3      
+  107   3                    menu_update();
+  108   3                    beep_update();                          
+  109   3                    Task_Delay[1] = 20;
+  110   3                  }
+  111   2                  if (Task_Delay[2] == 0)
+  112   2                  {
+  113   3                    /* ÈÎÎñ 1 Ö÷ÌåTask(1); */
+  114   3                      /*·­×ªLED*/
+  115   3                    //LL_GPIO_TogglePin(LED1_GPIO_PORT,LED1_GPIO_PIN);
+  116   3                    /* ÈÎÎñ 1 ÑÓÊ± 50ms */
+  117   3                    temp_adcv=channel_GetAdcAverage(7,100);
+  118   3                    temp_adca=channel_GetAdcAverage(0,100);
+  119   3                  
+  120   3      //              if(temp_GetAdcAverage>3600)//·Ö¶Î´¦ÀíÎó²î
+  121   3      //              sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor);//µ
+             -çÑ¹v
+  122   3      //              else if(temp_GetAdcAverage>3100)
+C251 COMPILER V5.60.0,  main                                                               29/10/24  08:37:09  PAGE 3   
+
+  123   3      //              sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+7);/
+             -/µçÑ¹v  
+  124   3      //              else if(temp_GetAdcAverage>2100)
+  125   3      //              sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+10);
+             -//µçÑ¹v  
+  126   3      //              else if(temp_GetAdcAverage>1100)
+  127   3      //              sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+15);
+             -//µçÑ¹v
+  128   3      //              else
+  129   3      //              sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+25);
+             -//µçÑ¹v  
+  130   3                    sys.voltage=linear_function(0,0,adjustv.adc_standard,4000,temp_adcv,1.0,adjustv.factor);
+  131   3                    sys.current=linear_function(adjusta.adc_tare,0,adjusta.adc_standard,4000,temp_adca,1.0,adjusta.fac
+             -tor);
+  132   3                    Task_Delay[2] = 200;
+  133   3                  }
+  134   2      
+  135   2      
+  136   2          }
+  137   1      }
+  138          /**
+  139            * @brief  TIM¸üÐÂÖÐ¶Ï»Øµ÷º¯Êý
+  140            * @param  ÎÞ
+  141            * @retval ÎÞ
+  142            */
+  143          void APP_UpdateCallback(void)//
+  144          {
+  145   1        T0_Count++;
+  146   1        key(50);//°´¼üÉ¨Ãè   periodÉ¨ÃèÖÜÆÚ
+  147   1      }
+  148          
+  149          
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       290     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        24     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        26     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

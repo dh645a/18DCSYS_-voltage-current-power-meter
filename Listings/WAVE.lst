@@ -1,0 +1,100 @@
+C251 COMPILER V5.60.0,  WAVE                                                               29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE WAVE
+OBJECT MODULE PLACED IN .\Output\WAVE.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE middle\WAVE\WAVE.C XSMALL BROWSE INCDIR(..\COMM;.\base;.\b
+                    -ase\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PW
+                    -M;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\WAVE.lst) TABS(2) OBJECT(.\Output\WAVE
+                    -.obj) 
+
+stmt  level    source
+
+    1          #include "wave.h"
+    2          #include "lcd.h"
+    3          #include "system.h"
+    4          u16 xdata wavebuf_1[40]={0};
+    5          void wave(int wavedata_1,bit direction)//波形数据获取处理,画波形 direction波形移动方向
+    6          {
+    7   1        static u8 i=0;
+    8   1        u8 Xtime; 
+    9   1        //Lcd_cls();  
+   10   1        //OLED_Clear_wave();
+   11   1        //if(T0_Count%600<300)
+   12   1        //LCD_Fill(9,0,79,62,BLACK);  
+   13   1      //  switch(i)
+   14   1      //  {
+   15   1      //    case 0:LCD_Fill(0,0,160,20,BLACK);i=1;break;
+   16   1      //    case 1:LCD_Fill(0,20,160,40,BLACK);i=2;break;
+   17   1      //    case 2:LCD_Fill(0,40,160,60,BLACK);i=3;break;
+   18   1      //    case 3:LCD_Fill(0,60,160,80,BLACK);i=0;break;
+   19   1      
+   20   1      //  }
+   21   1      //  if(sys.adc_state)
+   22   1      //  {
+   23   1          //LCD_DrawLine( 8, 64-1, 128-8-1, 64-1,RED) ;//下x轴
+   24   1          //LCD_DrawLine( 8, 0, 8, 64-1,RED) ;//y轴
+   25   1          //LCD_Draw_densityLine( 0, 64-8-1, 128-8-1, 64-8-1,1,2) ;//上x轴
+   26   1          
+   27   1              for (Xtime = 5; Xtime < 155; Xtime++) 
+   28   1              {
+   29   2                LCD_DrawLine( Xtime-1, (63-wavebuf_1[Xtime/5-1]/70), Xtime+5, (63-wavebuf_1[Xtime/5]/70),BLACK) ;
+   30   2                //LCD_DrawLine( Xtime-1, (63-wavebuf_2[Xtime-1]/10), Xtime, (63-wavebuf_2[Xtime]/10),1) ;
+   31   2              } 
+   32   1              LCD_ShowFloatNum(2,65,wavedata_1,4,1,sys.v_font_color,BLACK,12); //电压
+   33   1              if(direction)
+   34   1              {
+   35   2                for (Xtime = 1; Xtime < 40; Xtime++)
+   36   2                {
+   37   3                  wavebuf_1[Xtime - 1] = wavebuf_1[Xtime];        //电压数组左移,前一项覆盖后一项 
+   38   3                }   
+   39   2                wavebuf_1[39]=wavedata_1;//电压
+   40   2                
+   41   2                for (Xtime = 5; Xtime < 155; Xtime++) 
+   42   2                {
+   43   3                  LCD_DrawLine( Xtime-1, (63-wavebuf_1[Xtime/5-1]/70), Xtime+5, (63-wavebuf_1[Xtime/5]/70),RED) ;
+   44   3                  //LCD_DrawLine( Xtime-1, (63-wavebuf_2[Xtime-1]/10), Xtime, (63-wavebuf_2[Xtime]/10),1) ;
+   45   3                }
+   46   2              }
+   47   1              else
+   48   1              {
+   49   2                for (Xtime = 119; Xtime > 9; Xtime--)
+   50   2                {
+   51   3                  wavebuf_1[Xtime] = wavebuf_1[Xtime-1];        //数组右移,前一项覆盖后一项
+   52   3                }   
+   53   2                wavebuf_1[9]=wavedata_1;//电压
+   54   2                for (Xtime = 9; Xtime < 119; Xtime++) 
+   55   2                {
+   56   3                  LCD_DrawLine( Xtime, wavebuf_1[Xtime]/6, Xtime+1,wavebuf_1[Xtime+1]/6,RED) ;
+C251 COMPILER V5.60.0,  WAVE                                                               29/10/24  08:37:10  PAGE 2   
+
+   57   3                } 
+   58   2              }
+   59   1      //        sys.adc_state=0;
+   60   1      //    }
+   61   1        //OLED_Refresh_Gram_wave(0,0,160,80);
+   62   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       406     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =        80     ------
+  xdata-const size     =    ------     ------
+  edata size           =         1     ------
+  bit size             =    ------          1
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =        90     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

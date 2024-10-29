@@ -1,0 +1,79 @@
+C251 COMPILER V5.60.0,  pbdata                                                             19/04/24  09:57:00  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE pbdata
+OBJECT MODULE PLACED IN .\Output\pbdata.obj
+COMPILER INVOKED BY: E:\Program Files\keilc51\C251\BIN\C251.EXE base\pbdata.c XSMALL BROWSE INCDIR(..\COMM;.\base;.\base
+                    -\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\PWM;.
+                    -\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\pbdata.lst) TABS(2) OBJECT(.\Output\pbdat
+                    -a.obj) 
+
+stmt  level    source
+
+    1          #include "pbdata.h"   //引入自定义公共头文件
+    2          
+    3          /*********************************************************************************
+    4          *   函 数 名: delay_us
+    5          *   功能说明: 微秒延时程序，注意此函数的运行环境为(16M时钟速度)
+    6          *   形    参：nCount要延时的微秒数，输入nCount=1微妙
+    7          *   返 回 值: 无
+    8          *********************************************************************************/
+    9          void delay_us(u16 nCount)   //16M 晶振时  延时 1个微妙
+   10          {
+   11   1          nCount*=3;//等同于 nCount=nCount*3  相当于把nCount变量扩大3倍
+   12   1          while(--nCount);//nCount变量数值先减一，再判断nCount的数值是否大于0，大于0循环减一，等于0退出循环。
+   13   1      }
+   14          
+   15          /*********************************************************************************
+   16          *   函 数 名: delay_ms
+   17          *   功能说明: 毫秒延时程序，注意此函数的运行环境为(16M时钟速度)
+   18          *   形    参：nCount要延时的毫秒数，输入nCount=1毫秒
+   19          *   返 回 值: 无
+   20          *********************************************************************************/
+   21          void delay_ms(u16 nCount)  //16M 晶振时  延时 1个毫秒
+   22          {
+   23   1          while(nCount--)//先判断while()循环体里的nCount数值是否大于0，大于0循环，减一执行循环体，等于0退出循环
+             -。
+   24   1          {
+   25   2              delay_us(1000);//调用微妙延时函数，输入1000等译演示1毫秒。
+   26   2          }
+   27   1      }
+   28          /*
+   29          *********************************************************************************************************
+   30          * 函 数 名: bsp_Idle
+   31          * 功能说明: 空闲，延迟时执行的函数。用于喂狗。
+   32          * 形    参：无
+   33          * 返 回 值: 无
+   34          *********************************************************************************************************
+   35          */
+   36          void bsp_Idle(void)
+   37          {
+   38   1        ;
+   39   1      }
+   40          /************************ 论坛地址 www.zxkjmcu.com *******************************/
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =     25736     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =    ------     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+C251 COMPILER V5.60.0,  pbdata                                                             19/04/24  09:57:00  PAGE 2   
+
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

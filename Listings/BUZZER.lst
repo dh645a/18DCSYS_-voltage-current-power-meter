@@ -1,0 +1,323 @@
+C251 COMPILER V5.60.0,  BUZZER                                                             29/10/24  08:37:11  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE BUZZER
+OBJECT MODULE PLACED IN .\Output\BUZZER.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE base\BUZZER\BUZZER.c XSMALL BROWSE INCDIR(..\COMM;.\base;.
+                    -\base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\
+                    -PWM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\BUZZER.lst) TABS(2) OBJECT(.\Output\
+                    -BUZZER.obj) 
+
+stmt  level    source
+
+    1          /*-------------------------------------------------------------------------------------------------------
+             ---*/
+    2          /*                                                                                                       
+             -  */
+    3          /* Copyright(c) 2017 Nuvoton Technology Corp. All rights reserved.                                       
+             -  */
+    4          /*                                                                                                       
+             -  */
+    5          /*-------------------------------------------------------------------------------------------------------
+             ---*/
+    6          
+    7          //*******************************************************************************************************
+             -****
+    8          
+    9          //*******************************************************************************************************
+             -****
+   10          #include "buzzer.h" 
+   11          #include "pwm.h" 
+   12          #include "main.h" 
+   13          static u32 beep_startTime;
+   14          static u16 beep_lenTime;
+   15          static u8 beep_state;
+   16          static u8 idx;
+   17          typedef u16 tune_t;
+   18          static const tune_t* tune;  // The tune
+   19          static buzzFinish_f onFinish;
+   20          static void next(void);
+   21          typedef enum
+   22          {
+   23            TONE_STOP = 0,
+   24            TONE_PAUSE = 1,
+   25            TONE_REPEAT = 2,
+   26            TONE_1KHZ = 63,
+   27            TONE_2KHZ = 31,
+   28            TONE_2_5KHZ = 200-1,
+   29            TONE_3KHZ = 21,
+   30            TONE_3_5KHZ = 143-1,
+   31            TONE_4KHZ = 15,
+   32            TONE_4_5KHZ = 111-1,
+   33            TONE_5KHZ = 12,
+   34            TONE_5L= 159,
+   35            TONE_6L= 142,
+   36            TONE_1M= 120,
+   37            TONE_2M= 106,
+   38            TONE_3M= 95,
+   39            TONE_4M= 90,
+   40            TONE_5M= 80,
+   41            TONE_6M= 71,
+   42            TONE_7M= 64,
+   43            TONE_1H= 60,
+   44          } tone_t;
+   45          const tune_t code tuneAlarm[]  = {
+   46            TONE_2KHZ<<8 | 100,
+   47            TONE_PAUSE<<8 | 50,
+   48            TONE_2KHZ<<8 | 100,
+   49            TONE_PAUSE<<8 | 50,
+C251 COMPILER V5.60.0,  BUZZER                                                             29/10/24  08:37:11  PAGE 2   
+
+   50            TONE_3KHZ<<8 | 100,
+   51            TONE_PAUSE<<8 | 50,
+   52            TONE_3KHZ<<8 | 100,
+   53            TONE_PAUSE<<8 | 50,
+   54            TONE_STOP
+   55          };
+   56          const tune_t code tuneAlarm_L[]  = {
+   57            TONE_3KHZ<<8 | 100,
+   58            TONE_PAUSE<<8 | 100,
+   59            TONE_REPEAT
+   60          };
+   61          const tune_t code tuneAlarm_H[]  = {//Á½Ö»ÀÏ»¢
+   62            TONE_1M<<8 | 100,
+   63            TONE_PAUSE<<8 | 100,
+   64            TONE_2M<<8 | 100,
+   65            TONE_PAUSE<<8 | 100,
+   66            TONE_3M<<8 | 100,
+   67            TONE_PAUSE<<8 | 100,
+   68            TONE_1M<<8 | 100,
+   69            TONE_PAUSE<<8 | 200,
+   70            TONE_1M<<8 | 100,
+   71            TONE_PAUSE<<8 | 100,
+   72            TONE_2M<<8 | 100,
+   73            TONE_PAUSE<<8 | 100,
+   74            TONE_3M<<8 | 100,
+   75            TONE_PAUSE<<8 | 100,
+   76            TONE_1M<<8 | 100,
+   77            TONE_PAUSE<<8 | 200,
+   78            TONE_3M<<8 | 100,
+   79            TONE_PAUSE<<8 | 100,
+   80            TONE_4M<<8 | 100,
+   81            TONE_PAUSE<<8 | 100,
+   82            TONE_5M<<8 | 100,
+   83            TONE_PAUSE<<8 | 250,
+   84            TONE_3M<<8 | 100,
+   85            TONE_PAUSE<<8 | 100,
+   86            TONE_4M<<8 | 100,
+   87            TONE_PAUSE<<8 | 100,
+   88            TONE_5M<<8 | 100,
+   89            TONE_PAUSE<<8 | 250,
+   90            TONE_REPEAT
+   91          };
+   92          const tune_t code tuneAlarm_IN[]  = {
+   93            TONE_6M<<8 | 100,
+   94            TONE_PAUSE<<8 | 150,
+   95            TONE_5L<<8 | 100,
+   96            TONE_PAUSE<<8 | 100,
+   97            TONE_3M<<8 | 100,
+   98            TONE_PAUSE<<8 | 100,
+   99            TONE_5M<<8 | 100,
+  100            TONE_PAUSE<<8 | 100,
+  101            TONE_1H<<8 | 100,
+  102            TONE_PAUSE<<8 | 100,
+  103            TONE_6L<<8 | 100,
+  104            TONE_PAUSE<<8 | 50,
+  105            TONE_5L<<8 | 100,
+  106            TONE_PAUSE<<8 | 50,
+  107            TONE_6M<<8 | 100,
+  108            TONE_PAUSE<<8 | 250,
+  109            TONE_REPEAT
+  110          //  TONE_2KHZ<<8 | 100,
+  111          //  TONE_PAUSE<<8 |50,
+  112          //  TONE_3KHZ<<8 | 100,
+  113          //  TONE_PAUSE<<8 | 50,
+  114          //  TONE_1KHZ<<8 | 100,
+  115          //  TONE_PAUSE<<8 | 50,
+C251 COMPILER V5.60.0,  BUZZER                                                             29/10/24  08:37:11  PAGE 3   
+
+  116          //  TONE_REPEAT
+  117          };
+  118          const tune_t code tuneAlarm_OUT[]  = {
+  119            TONE_3KHZ<<8 | 150,
+  120            TONE_PAUSE<<8 | 150,
+  121            TONE_3KHZ<<8 | 150,
+  122            TONE_PAUSE<<8 | 150,
+  123            TONE_5KHZ<<8 | 250,
+  124            TONE_5KHZ<<8 | 250,
+  125            TONE_STOP
+  126          };
+  127          const tune_t code tuneUsbCharged[]  = {
+  128            TONE_2KHZ<<8 | 150,
+  129            TONE_PAUSE<<8 | 150,
+  130            TONE_2KHZ<<8 | 150,
+  131            TONE_PAUSE<<8 | 150,
+  132            TONE_4KHZ<<8 | 250,
+  133            TONE_4KHZ<<8 | 250,
+  134            TONE_STOP
+  135          };
+  136          const tune_t code tuneBtn_up[]  = {
+  137            TONE_2KHZ<<8 | 100,
+  138            TONE_PAUSE<<8 | 50,
+  139            TONE_3KHZ<<8 | 100,
+  140            TONE_STOP
+  141            // Õâ¶Î´úÂë¶¨ÒåÁËÒ»¸öÃûÎª tuneBtn1 µÄÊý×é£¬ÆäÀàÐÍÎª tune_t£¬²¢Ê¹ÓÃÁË TUNEMEM ºêÐÞÊÎ¡£
+  142            //Êý×éÖÐµÄÃ¿¸öÔªËØ¶¼ÊÇÒ»¸öÒôµ÷£¨tune_t ÀàÐÍ£©£¬ÓÃÓÚ°´ÏÂ°´Å¥Ê±²¥·ÅµÄÒôÀÖ¡£Ã¿¸öÒôµ÷ÓÉÁ½²¿·Ö×é³É£º¸ßÎ»±íÊ¾Æ
+             -µÂÊ£¬µÍÎ»±íÊ¾³ÖÐøÊ±¼ä¡£
+  143          
+  144            // ÏÂÃæÊÇ¶ÔÃ¿¸öÔªËØµÄ½âÊÍ£º
+  145          
+  146            // TONE_2KHZ << 8 | 100£º±íÊ¾Ò»¸öÆµÂÊÎª 2kHz£¬³ÖÐøÊ±¼äÎª 100 ºÁÃëµÄÒôµ÷¡£
+  147            // TONE_PAUSE << 8 | 50£º±íÊ¾Ò»¸ö¾²Òô£¬³ÖÐøÊ±¼äÎª 50 ºÁÃëµÄÒôµ÷¡£
+  148            // TONE_3KHZ << 8 | 100£º±íÊ¾Ò»¸öÆµÂÊÎª 3kHz£¬³ÖÐøÊ±¼äÎª 100 ºÁÃëµÄÒôµ÷¡£
+  149            // TONE_STOP£º±íÊ¾Í£Ö¹²¥·ÅÒôµ÷µÄ±êÖ¾¡£
+  150            // ÕâÑù£¬tuneBtn1 Êý×éÖÐµÄÔªËØÃèÊöÁË°´ÏÂ°´Å¥Ê±²¥·ÅµÄÒôÀÖÐòÁÐ¡£
+  151          };
+  152          
+  153          const tune_t code tuneBtn_set[]  = {
+  154            TONE_3KHZ<<8 | 100,
+  155            TONE_PAUSE<<8 | 50,
+  156            //TONE_3KHZ<<8 | 100,
+  157            TONE_STOP
+  158          };
+  159          
+  160          const tune_t code tuneBtn_down[]  = {
+  161            TONE_3KHZ<<8 | 100,
+  162            TONE_PAUSE<<8 | 50,
+  163            TONE_2KHZ<<8 | 100,
+  164            TONE_STOP
+  165          };
+  166          void Init_buzzer(void)//·äÃùÆ÷³õÊ¼»¯
+  167          {
+  168   1        pwm_init_beep();
+  169   1      }
+  170          
+  171          void beep(u16 frequency,u16 duty,u16 time,u8 state,buzzFinish_f _onFinish)
+  172          {
+  173   1          beep_state=state;
+  174   1          beep_startTime=T0_Count;
+  175   1          beep_lenTime=time;
+  176   1          onFinish = _onFinish;
+  177   1          
+  178   1          PWMA_ARRH = (u8)(frequency >> 8); //ÉèÖÃÖÜÆÚÊ±¼ä
+  179   1          PWMA_ARRL = (u8)frequency;
+  180   1          PWMA_CCR4H = (u8)(duty >> 8); //ÉèÖÃÕ¼¿Õ±ÈÊ±¼ä
+C251 COMPILER V5.60.0,  BUZZER                                                             29/10/24  08:37:11  PAGE 4   
+
+  181   1          PWMA_CCR4L = (u8)(duty);
+  182   1          PWMA_BKR = 0x80;  //Ê¹ÄÜÖ÷Êä³ö
+  183   1      }
+  184          
+  185          void beep_update(void)
+  186          {
+  187   1        if(((T0_Count-beep_startTime)>=beep_lenTime)&&beep_state)
+  188   1        {
+  189   2          beep_state=0;PWMA_BKR = 0x00;  //²»Ê¹ÄÜ
+  190   2          if(onFinish != NULL)
+  191   2            onFinish();
+  192   2        }
+  193   1          
+  194   1      }
+  195          void tune_play(const tune_t* _tune)
+  196          {
+  197   1        // Check priority, if lower than currently playing tune priority then ignore it
+  198   1      
+  199   1        tune  = _tune;
+  200   1        idx   = 0;
+  201   1      
+  202   1        // Begin playing
+  203   1        next();
+  204   1      }
+  205          static void next()
+  206          {
+  207   1        // Read next tone
+  208   1        u16 tune_data = tune[idx++];
+  209   1      
+  210   1        u8 len = tune_data;
+  211   1          // Play next tone
+  212   1          //buzzer_buzz(len, (tone_t)(data>>8), vol, prio, next);
+  213   1      //  if(tune_data==TONE_PAUSE)
+  214   1      //    PWMA_BKR = 0x00;  //²»Ê¹ÄÜ
+  215   1      //  else
+  216   1      //    beep((tone_t)(tune_data>>8),((tone_t)(tune_data>>8))/2,len,1,next); 
+  217   1      //    // If tone was TONE_STOP then reset priority
+  218   1      //    if(len == TONE_STOP)
+  219   1      //    {
+  220   1      //      beep_state=0;PWMA_BKR = 0x00;  //²»Ê¹ÄÜ
+  221   1      //    }
+  222   1          
+  223   1        if(len != TONE_REPEAT)
+  224   1        {
+  225   2          // Play next tone
+  226   2          beep((tone_t)(tune_data>>8),((tone_t)(tune_data>>8))/2,len,1,next); 
+  227   2          
+  228   2          // If tone was TONE_STOP then reset priority
+  229   2          if(len == TONE_STOP)
+  230   2          {
+  231   3            beep_state=0;PWMA_BKR = 0x00;  //²»Ê¹ÄÜ
+  232   3          }
+  233   2        }
+  234   1        else
+  235   1        {
+  236   2          // Repeat
+  237   2          idx = 0;
+  238   2          next();
+*** WARNING C190 IN LINE 238 OF base\BUZZER\BUZZER.c: 'next': recursive call to non-reentrant function
+  239   2        }
+  240   1      }
+  241          
+  242          void tune_stop()
+  243          {
+  244   1        beep(TONE_STOP,0,0,0,NULL);
+  245   1      
+C251 COMPILER V5.60.0,  BUZZER                                                             29/10/24  08:37:11  PAGE 5   
+
+  246   1      }
+  247          void beep_key(btn_t btn)
+  248          {
+  249   1          // Read next tone   
+  250   1        switch (btn)
+  251   1        {
+  252   2          case BTN_UP: tune_play(tuneBtn_up);break;
+  253   2          case BTN_DOWN: tune_play(tuneBtn_down);    break;
+  254   2          case BTN_SET: tune_play(tuneBtn_set);  break;
+  255   2          case BTN_RETURN: tune_play(tuneBtn_set); break;
+  256   2          default: break;
+  257   2        }
+  258   1      }
+  259          void beep_alarm(u8 i)
+  260          {
+  261   1        switch (i)
+  262   1        {
+  263   2          case 1: tune_play(tuneAlarm_H);break;
+  264   2          case 2: tune_play(tuneAlarm_L);    break;
+  265   2          case 3: tune_play(tuneAlarm_IN);  break;
+  266   2          case 4: tune_play(tuneAlarm_OUT); break;
+  267   2          default: break;
+  268   2        }
+  269   1        
+  270   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       540     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        14     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =    ------     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  1 WARNING(S),  0 ERROR(S)

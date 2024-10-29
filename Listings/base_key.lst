@@ -1,0 +1,135 @@
+C251 COMPILER V5.60.0,  base_key                                                           29/10/24  08:37:10  PAGE 1   
+
+
+C251 COMPILER V5.60.0, COMPILATION OF MODULE base_key
+OBJECT MODULE PLACED IN .\Output\base_key.obj
+COMPILER INVOKED BY: D:\Program Files\keil5\C251\BIN\C251.EXE base\KEY\base_key.c XSMALL BROWSE INCDIR(..\COMM;.\base;.\
+                    -base\LCD;.\middle\LCDapp;.\base\adc;.\base\KEY;.\base\TIME;.\Src;.\middle\Adjust;.\Src;.\middle\WAVE;.\base\SPI;.\base\P
+                    -WM;.\base\BUZZER;.\middle\ALARM;.\middle\MENU;.\Driver\inc) DEBUG PRINT(.\Listings\base_key.lst) TABS(2) OBJECT(.\Output
+                    -\base_key.obj) 
+
+stmt  level    source
+
+    1          /**
+    2            ******************************************************************************
+    3            * @file    bsp_key.c
+    4            * @author  Alexander
+    5            * @version V1.0
+    6            * @date    2022-xx-xx
+    7            * @brief   按键应用bsp（扫描模式）
+    8            ******************************************************************************
+    9            * @attention
+   10            *
+   11            * 实验平台:HK32F030M开发板 
+   12            * 论坛    :https://bbs.21ic.com/iclist-1010-1.html
+   13            *
+   14            ******************************************************************************
+   15            */ 
+   16            
+   17          #include "base_key.h"
+   18          /**
+   19            * @brief  配置按键用到的I/O口
+   20            * @param  无
+   21            * @retval 无
+   22            */
+   23          Key_Typedef sys_key_up;
+   24          Key_Typedef sys_key_down;
+   25          Key_Typedef sys_key_set;
+   26          Key_Typedef sys_key_return;
+   27          void Key_GPIO_Config(void)
+   28          {
+   29   1         /* 初始化按键BUTTON */
+   30   1      
+   31   1      }
+   32          void Key_value_init(void)
+   33          {
+   34   1         /* 初始化按键BUTTON */
+   35   1            sys_key_up.Key_short = 0;
+   36   1            sys_key_down.Key_short = 0;
+   37   1            sys_key_set.Key_short = 0;
+   38   1            sys_key_return.Key_short = 0;
+   39   1            sys_key_up.Key_long = 0;
+   40   1            sys_key_down.Key_long = 0;
+   41   1            sys_key_set.Key_long = 0;
+   42   1            sys_key_return.Key_long = 0;
+   43   1      }
+   44           /*
+   45           * 函数名：Key_Scan
+   46           * 描述  ：检测是否有按键按下
+   47           * 输入  ：GPIOx：x 可以是 A，B，C，D或者 E
+   48           *         GPIO_Pin：待读取的端口位   
+   49           * 输出  ：KEY_OFF(没按下按键)、KEY_ON（按下按键）
+   50           */
+   51          /*********************************************END OF FILE**********************/
+   52          void key_scan(uint32_t key,Key_Typedef *sys_key)//按键扫描
+   53          {
+   54   1          if(sys_key->Key_temp)//如果已经按下了  
+   55   1          {
+   56   2            if(key == KEY_ON)//如果第二次检测有效。
+C251 COMPILER V5.60.0,  base_key                                                           29/10/24  08:37:10  PAGE 2   
+
+   57   2            {
+   58   3              sys_key->Key_temp ++;
+   59   3              if(sys_key->Key_temp > One)
+   60   3              sys_key->Key_long = 1;
+   61   3            }
+   62   2            else //一旦检测到松手了，要么是单击了一次。要么是长按过后想松手了，也就是不希望发生长按的功能了
+   63   2            {
+   64   3              sys_key->Key_state=1;//松手标志
+   65   3              if(sys_key->Key_temp <= One)
+   66   3              {
+   67   4                sys_key->Key_long = 0;
+   68   4                sys_key->Key_short = 1;
+   69   4              }
+   70   3              sys_key->Key_temp = 0;
+   71   3            }
+   72   2          }
+   73   1          else
+   74   1          {
+   75   2            if(key == KEY_ON)//第一次检测到按键按下
+   76   2              sys_key->Key_temp++ ;//把按键状态送到临时变量里面
+   77   2            else
+   78   2            {
+   79   3              sys_key->Key_long = 0;
+   80   3              sys_key->Key_temp =0;
+   81   3            }
+   82   2          }
+   83   1      }
+   84          void key(uint8_t period)//按键扫描   period扫描周期
+   85          {
+   86   1          static uint8_t i=0;
+   87   1          i++;
+   88   1          if(i==period)
+   89   1          {
+   90   2            i=0;  
+   91   2            key_scan(KEY_SET,&sys_key_set);//按键扫描
+   92   2            key_scan(KEY_RETURN,&sys_key_return);//按键扫描
+   93   2            key_scan(KEY_UP,&sys_key_up);//按键扫描
+   94   2            key_scan(KEY_DOWN,&sys_key_down);//按键扫描
+   95   2      
+   96   2          }
+   97   1      }
+
+
+Module Information          Static   Overlayable
+------------------------------------------------
+  code size            =       212     ------
+  ecode size           =    ------     ------
+  data size            =    ------     ------
+  idata size           =    ------     ------
+  pdata size           =    ------     ------
+  xdata size           =    ------     ------
+  xdata-const size     =    ------     ------
+  edata size           =        17     ------
+  bit size             =    ------     ------
+  ebit size            =    ------     ------
+  bitaddressable size  =    ------     ------
+  ebitaddressable size =    ------     ------
+  far data size        =    ------     ------
+  huge data size       =    ------     ------
+  const size           =    ------     ------
+  hconst size          =         5     ------
+End of Module Information.
+
+
+C251 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
