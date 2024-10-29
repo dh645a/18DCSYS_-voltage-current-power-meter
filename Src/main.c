@@ -8,33 +8,23 @@
 /* --- Web: www.STCMCUDATA.com  ---------------------------------------*/
 /* --- BBS: www.STCAIMCU.com  -----------------------------------------*/
 /* --- QQ:  800003751 -------------------------------------------------*/
-/* Èç¹ûÒªÔÚ³ÌĞòÖĞÊ¹ÓÃ´Ë´úÂë,ÇëÔÚ³ÌĞòÖĞ×¢Ã÷Ê¹ÓÃÁËSTCµÄ×ÊÁÏ¼°³ÌĞò            */
+/* å¦‚æœè¦åœ¨ç¨‹åºä¸­ä½¿ç”¨æ­¤ä»£ç ,è¯·åœ¨ç¨‹åºä¸­æ³¨æ˜ä½¿ç”¨äº†STCçš„èµ„æ–™åŠç¨‹åº            */
 /*---------------------------------------------------------------------*/
 
 
-/*************  ¹¦ÄÜËµÃ÷    **************
+/*************  åŠŸèƒ½è¯´æ˜    **************
 
-±¾Àı³Ì»ùÓÚSTC32GÎªÖ÷¿ØĞ¾Æ¬µÄÊµÑéÏä9.6°æ±¾½øĞĞ±àĞ´²âÊÔ¡£
+æœ¬ä¾‹ç¨‹åŸºäºSTC32Gä¸ºä¸»æ§èŠ¯ç‰‡
 
-Ê¹ÓÃKeil C251±àÒëÆ÷£¬Memory ModelÍÆ¼öÉèÖÃXSmallÄ£Ê½£¬Ä¬ÈÏ¶¨Òå±äÁ¿ÔÚedata£¬µ¥Ê±ÖÓ´æÈ¡·ÃÎÊËÙ¶È¿ì¡£
+ä½¿ç”¨Keil C251ç¼–è¯‘å™¨ï¼ŒMemory Modelæ¨èè®¾ç½®XSmallæ¨¡å¼ï¼Œé»˜è®¤å®šä¹‰å˜é‡åœ¨edataï¼Œå•æ—¶é’Ÿå­˜å–è®¿é—®é€Ÿåº¦å¿«ã€‚
 
-edata½¨Òé±£Áô1K¸ø¶ÑÕ»Ê¹ÓÃ£¬¿Õ¼ä²»¹»Ê±¿É½«´óÊı×é¡¢²»³£ÓÃ±äÁ¿¼Óxdata¹Ø¼ü×Ö¶¨Òåµ½xdata¿Õ¼ä¡£
+edataå»ºè®®ä¿ç•™1Kç»™å †æ ˆä½¿ç”¨ï¼Œç©ºé—´ä¸å¤Ÿæ—¶å¯å°†å¤§æ•°ç»„ã€ä¸å¸¸ç”¨å˜é‡åŠ xdataå…³é”®å­—å®šä¹‰åˆ°xdataç©ºé—´ã€‚
 
-Çı¶¯LCD1602×Ö·ûÆÁ.
-
-ÏÔÊ¾Ğ§¹ûÎª: LCDÏÔÊ¾Ê±¼ä.
-
-µÚÒ»ĞĞÏÔÊ¾ ---Clock demo---
-µÚ¶şĞĞÏÔÊ¾     12-00-00
-
-
-R179º¸½Ó0Å·µç×è£¬½«16PIN¶Ì½Óµ½GND.
-
-ÏÂÔØÊ±, Ñ¡ÔñÊ±ÖÓ 24MHz (ÓÃ»§¿É×ÔĞĞĞŞ¸ÄÆµÂÊ).
+ä¸‹è½½æ—¶, é€‰æ‹©æ—¶é’Ÿ 30MHz (ç”¨æˆ·å¯è‡ªè¡Œä¿®æ”¹é¢‘ç‡).
 
 ******************************************/
 
-#include "stc32g.h"       //°üº¬´ËÍ·ÎÄ¼şºó£¬²»ĞèÒªÔÙ°üº¬"reg51.h"Í·ÎÄ¼ş
+#include "stc32g.h"       //åŒ…å«æ­¤å¤´æ–‡ä»¶åï¼Œä¸éœ€è¦å†åŒ…å«"reg51.h"å¤´æ–‡ä»¶
 #include "intrins.h"
 #include "lcd_init.h"
 #include "lcd.h"
@@ -59,41 +49,41 @@ uint16_t adc;
 uint16_t temp_adcv,temp_adca;
 void main(void)
 {
-    WTST = 0;  //ÉèÖÃ³ÌĞòÖ¸ÁîÑÓÊ±²ÎÊı£¬¸³ÖµÎª0¿É½«CPUÖ´ĞĞÖ¸ÁîµÄËÙ¶ÈÉèÖÃÎª×î¿ì
-    EAXFR = 1; //À©Õ¹¼Ä´æÆ÷(XFR)·ÃÎÊÊ¹ÄÜ
-    CKCON = 0; //Ìá¸ß·ÃÎÊXRAMËÙ¶È
+    WTST = 0;  //è®¾ç½®ç¨‹åºæŒ‡ä»¤å»¶æ—¶å‚æ•°ï¼Œèµ‹å€¼ä¸º0å¯å°†CPUæ‰§è¡ŒæŒ‡ä»¤çš„é€Ÿåº¦è®¾ç½®ä¸ºæœ€å¿«
+    EAXFR = 1; //æ‰©å±•å¯„å­˜å™¨(XFR)è®¿é—®ä½¿èƒ½
+    CKCON = 0; //æé«˜è®¿é—®XRAMé€Ÿåº¦
     
-    P1M1 = 0x83;   P1M0 = 0x00;   //P1.7P1.1P1.0 Îª ADC ¸ß×èÊäÈë£¬ÆäÓàÉèÖÃÎª×¼Ë«Ïò¿Ú
-		P1SR|=0x7C;//¶Ë¿ÚËÙÂÊ
-    P3M1 = 0x00;   P3M0 = 0x18;   //ÉèÖÃP3.4¡¢P3.3ÎªÍÆÍì,ÆäÓàÎª×¼Ë«Ïò¿Ú
-		P3PU=0xE4;//°´¼üÉÏÀ­
-		//P3SR|=0xe0;//¶Ë¿ÚËÙÂÊ
+    P1M1 = 0x83;   P1M0 = 0x00;   //P1.7P1.1P1.0 ä¸º ADC é«˜é˜»è¾“å…¥ï¼Œå…¶ä½™è®¾ç½®ä¸ºå‡†åŒå‘å£
+		P1SR|=0x7C;//ç«¯å£é€Ÿç‡
+    P3M1 = 0x00;   P3M0 = 0x18;   //è®¾ç½®P3.4ã€P3.3ä¸ºæ¨æŒ½,å…¶ä½™ä¸ºå‡†åŒå‘å£
+		P3PU=0xE4;//æŒ‰é”®ä¸Šæ‹‰
+		//P3SR|=0xe0;//ç«¯å£é€Ÿç‡
 		ADCx_Init();
 		HAL_SPI_Init();
 	  //SPI_init();
-		LCD_Init();//LCD³õÊ¼»¯
+		LCD_Init();//LCDåˆå§‹åŒ–
 	  LCD_Fill(0,0,LCD_W,LCD_H,BLACK);
 		sys_control_Init();
 		Timer0_init();
 		Init_buzzer();
 		//pwm_init_blk();
-	  EA = 1;     //´ò¿ª×ÜÖĞ¶Ï
+	  EA = 1;     //æ‰“å¼€æ€»ä¸­æ–­
 		//beep(12000,6000,100,1);
-		sys_EEPROM_read();//¶ÁÈ¡EEPROMÊı¾İ
+		sys_EEPROM_read();//è¯»å–EEPROMæ•°æ®
 		delay_ms(5000);
 		adjust_reset();
 
-		adjust_Init();//×¢Òâ´ø1·ÖÖÓËÀÑ­»·
+		adjust_Init();//æ³¨æ„å¸¦1åˆ†é’Ÿæ­»å¾ªç¯
     while(1)
     {
-//						LCD_ShowChinese(40,0,"ÖĞ¾°Ô°µç×Ó",RED,BLACK,16,0);
+//						LCD_ShowChinese(40,0,"ä¸­æ™¯å›­ç”µå­",RED,BLACK,16,0);
 					  //LCD_ShowFloatNum1(10,60,temp_adc,5,GREEN,BLACK,16);
 						//LCD_ShowIntNum(80,60,adjust_adj_a(),4,GREEN,BLACK,16);
 						//LCD_ShowPicture(100,20,40,40,gImage_1);
 						if (Task_Delay[0] == 0)
 						{
-							/* ÈÎÎñ 0 Ö÷ÌåTask(0); */
-							/* ÈÎÎñ 0 ÑÓÊ± 1ms */
+							/* ä»»åŠ¡ 0 ä¸»ä½“Task(0); */
+							/* ä»»åŠ¡ 0 å»¶æ—¶ 1ms */
 							//if(sys.adc_state==0)
 
 							Task_Delay[0] = 10;
@@ -101,8 +91,8 @@ void main(void)
 
 						if (Task_Delay[1] == 0)
 						{
-							/* ÈÎÎñ 1 Ö÷ÌåTask(1); */
-							/* ÈÎÎñ 1 ÑÓÊ± 50ms */
+							/* ä»»åŠ¡ 1 ä¸»ä½“Task(1); */
+							/* ä»»åŠ¡ 1 å»¶æ—¶ 50ms */
 
 							menu_update();
 							beep_update();													
@@ -110,23 +100,23 @@ void main(void)
 						}
 						if (Task_Delay[2] == 0)
 						{
-							/* ÈÎÎñ 1 Ö÷ÌåTask(1); */
-								/*·­×ªLED*/
+							/* ä»»åŠ¡ 1 ä¸»ä½“Task(1); */
+								/*ç¿»è½¬LED*/
 							//LL_GPIO_TogglePin(LED1_GPIO_PORT,LED1_GPIO_PIN);
-							/* ÈÎÎñ 1 ÑÓÊ± 50ms */
+							/* ä»»åŠ¡ 1 å»¶æ—¶ 50ms */
 							temp_adcv=channel_GetAdcAverage(7,100);
 							temp_adca=channel_GetAdcAverage(0,100);
 						
-//							if(temp_GetAdcAverage>3600)//·Ö¶Î´¦ÀíÎó²î
-//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor);//µçÑ¹v
+//							if(temp_GetAdcAverage>3600)//åˆ†æ®µå¤„ç†è¯¯å·®
+//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor);//ç”µå‹v
 //							else if(temp_GetAdcAverage>3100)
-//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+7);//µçÑ¹v	
+//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+7);//ç”µå‹v	
 //							else if(temp_GetAdcAverage>2100)
-//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+10);//µçÑ¹v	
+//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+10);//ç”µå‹v	
 //							else if(temp_GetAdcAverage>1100)
-//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+15);//µçÑ¹v
+//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+15);//ç”µå‹v
 //							else
-//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+25);//µçÑ¹v	
+//							sys.voltage=adc_to_actual(0,adjust.adc_standard,0,4000,temp_GetAdcAverage,1.0,adjust.factor+25);//ç”µå‹v	
 							sys.voltage=linear_function(0,0,adjustv.adc_standard,4000,temp_adcv,1.0,adjustv.factor);
 							sys.current=linear_function(adjusta.adc_tare,0,adjusta.adc_standard,4000,temp_adca,1.0,adjusta.factor);
 							Task_Delay[2] = 200;
@@ -136,14 +126,14 @@ void main(void)
     }
 }
 /**
-  * @brief  TIM¸üĞÂÖĞ¶Ï»Øµ÷º¯Êı
-  * @param  ÎŞ
-  * @retval ÎŞ
+  * @brief  TIMæ›´æ–°ä¸­æ–­å›è°ƒå‡½æ•°
+  * @param  æ— 
+  * @retval æ— 
   */
 void APP_UpdateCallback(void)//
 {
   T0_Count++;
-  key(50);//°´¼üÉ¨Ãè   periodÉ¨ÃèÖÜÆÚ
+  key(50);//æŒ‰é”®æ‰«æ   periodæ‰«æå‘¨æœŸ
 }
 
 
